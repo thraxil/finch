@@ -1,0 +1,48 @@
+{{ define "title" }}Finch{{ end }}
+
+{{ define "content" }}
+
+<h1>Finch</h1>
+
+{{ if .Username }}
+<form action="/post/" method="post" class="form">
+	<fieldset>
+		<legend>Post</legend>
+
+		<div class="row">
+			<div class="col-lg-12">
+				<textarea class="form-control" name="body"></textarea>
+			</div>
+		</div>
+
+		<div class="row">
+			<div class="col-lg-6">
+				{{ range .Channels }}
+				<input type="checkbox" name="channel_{{.Id}}" />
+				{{.Label}}<br />
+				{{ end }}
+
+				<input type="text" name="new_channel0" placeholder="new channel 1"
+							 class="form-control" />
+
+				<input type="text" name="new_channel1" placeholder="new channel 2"
+							 class="form-control" />
+
+				<input type="text" name="new_channel2" placeholder="new channel 3"
+							 class="form-control" />
+			</div>
+			<div class="col-lg-6">
+				<input type="submit" class="btn btn-primary" />
+			</div>
+		</div>
+				
+	</fieldset>
+</form>
+{{ end }}
+
+{{ range .Posts }}
+<hr />
+{{.RenderBody}} - {{.User.Username}}
+{{ end }}
+
+{{ end }}

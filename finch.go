@@ -25,12 +25,16 @@ func main() {
 
 	ctx := Context{P: p}
 
-	http.HandleFunc("/favicon.ico", faviconHandler)
 	http.HandleFunc("/", makeHandler(indexHandler, ctx))
+	http.HandleFunc("/post/", makeHandler(postHandler, ctx))
 
+	// authy stuff
 	http.HandleFunc("/register/", makeHandler(registerHandler, ctx))
 	http.HandleFunc("/login/", makeHandler(loginHandler, ctx))
 	http.HandleFunc("/logout/", makeHandler(logoutHandler, ctx))
+
+	// static misc.
+	http.HandleFunc("/favicon.ico", faviconHandler)
 	http.Handle("/media/", http.StripPrefix("/media/",
 		http.FileServer(http.Dir(os.Getenv("FINCH_MEDIA_DIR")))))
 	log.Fatal(http.ListenAndServe(":"+os.Getenv("FINCH_PORT"), nil))
