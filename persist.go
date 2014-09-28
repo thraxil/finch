@@ -9,23 +9,23 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-type Persistance struct {
+type Persistence struct {
 	Database *sql.DB
 }
 
-func NewPersistance(dbfile string) *Persistance {
+func NewPersistence(dbfile string) *Persistence {
 	db, err := sql.Open("sqlite3", dbfile)
 	if err != nil {
 		log.Fatal(err)
 	}
-	return &Persistance{Database: db}
+	return &Persistence{Database: db}
 }
 
-func (p *Persistance) Close() {
+func (p *Persistence) Close() {
 	p.Database.Close()
 }
 
-func (p Persistance) GetUser(username string) (*User, bool) {
+func (p Persistence) GetUser(username string) (*User, bool) {
 	stmt, err := p.Database.Prepare("select id, password from users where username = ?")
 	if err != nil {
 		log.Fatal(err)
@@ -43,7 +43,7 @@ func (p Persistance) GetUser(username string) (*User, bool) {
 	return &User{Id: id, Username: username, Password: []byte(password)}, true
 }
 
-func (p Persistance) GetUserById(id int) (*User, error) {
+func (p Persistence) GetUserById(id int) (*User, error) {
 	q := `select username, password from users where id = ?`
 	stmt, err := p.Database.Prepare(q)
 	if err != nil {
@@ -62,7 +62,7 @@ func (p Persistance) GetUserById(id int) (*User, error) {
 	return &User{Id: id, Username: username, Password: []byte(password)}, nil
 }
 
-func (p *Persistance) CreateUser(username, password string) (*User, error) {
+func (p *Persistence) CreateUser(username, password string) (*User, error) {
 	var user User
 	user.Username = username
 	encpassword := user.SetPassword(password)
@@ -92,7 +92,7 @@ type Channel struct {
 	Label string
 }
 
-func (p Persistance) UserChannels(u User) []*Channel {
+func (p Persistence) UserChannels(u User) []*Channel {
 	q := `select id, slug, label from channel where user_id = ?`
 	stmt, err := p.Database.Prepare(q)
 	if err != nil {
@@ -119,7 +119,7 @@ func (p Persistance) UserChannels(u User) []*Channel {
 	return channels
 }
 
-func (p *Persistance) AddChannels(u User, names []string) ([]*Channel, error) {
+func (p *Persistence) AddChannels(u User, names []string) ([]*Channel, error) {
 	created := make([]*Channel, 0)
 	tx, err := p.Database.Begin()
 	if err != nil {
@@ -149,7 +149,7 @@ func (p *Persistance) AddChannels(u User, names []string) ([]*Channel, error) {
 	return created, nil
 }
 
-func (p Persistance) GetChannel(u User, slug string) (*Channel, error) {
+func (p Persistence) GetChannel(u User, slug string) (*Channel, error) {
 	q := `select id, label from channel where user_id = ? AND slug = ?`
 	stmt, err := p.Database.Prepare(q)
 	if err != nil {
@@ -168,7 +168,7 @@ func (p Persistance) GetChannel(u User, slug string) (*Channel, error) {
 	return &Channel{Id: id, User: &u, Slug: slug, Label: label}, nil
 }
 
-func (p Persistance) GetChannelById(id int) (*Channel, error) {
+func (p Persistence) GetChannelById(id int) (*Channel, error) {
 	q := `select user_id, slug, label from channel where id = ?`
 	stmt, err := p.Database.Prepare(q)
 	if err != nil {
@@ -194,7 +194,7 @@ func (p Persistance) GetChannelById(id int) (*Channel, error) {
 	return &Channel{Id: id, User: u, Slug: slug, Label: label}, nil
 }
 
-func (p Persistance) GetPost(id int) (*Post, error) {
+func (p Persistence) GetPost(id int) (*Post, error) {
 	q := `select user_id, body, posted from post where id = ?`
 	stmt, err := p.Database.Prepare(q)
 	if err != nil {
@@ -222,7 +222,7 @@ func (p Persistance) GetPost(id int) (*Post, error) {
 	return &Post{Id: id, User: u, Body: body, Posted: posted}, nil
 }
 
-func (p Persistance) GetAllPosts(limit int, offset int) ([]*Post, error) {
+func (p Persistence) GetAllPosts(limit int, offset int) ([]*Post, error) {
 	q := `select id, user_id, body, posted
         from post order by posted desc limit ? offset ?`
 	stmt, err := p.Database.Prepare(q)
@@ -256,7 +256,7 @@ func (p Persistance) GetAllPosts(limit int, offset int) ([]*Post, error) {
 
 }
 
-func (p *Persistance) AddPost(u User, body string, channels []*Channel) (*Post, error) {
+func (p *Persistence) AddPost(u User, body string, channels []*Channel) (*Post, error) {
 	tx, err := p.Database.Begin()
 	if err != nil {
 		log.Fatal(err)

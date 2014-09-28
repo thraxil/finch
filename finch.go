@@ -18,7 +18,7 @@ func makeHandler(fn func(http.ResponseWriter, *http.Request, Context), ctx Conte
 }
 
 func main() {
-	p := NewPersistance(os.Getenv("FINCH_DB_FILE"))
+	p := NewPersistence(os.Getenv("FINCH_DB_FILE"))
 	defer p.Close()
 
 	store = sessions.NewCookieStore([]byte(os.Getenv("FINCH_SECRET")))

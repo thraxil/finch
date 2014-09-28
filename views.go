@@ -32,7 +32,7 @@ func faviconHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 type Context struct {
-	P    *Persistance
+	P    *Persistence
 	User *User
 }
 
