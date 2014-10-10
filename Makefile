@@ -2,6 +2,7 @@ install_deps:
 	go get github.com/mattn/go-sqlite3
 	go get github.com/gorilla/sessions
 	go get github.com/russross/blackfriday
+	go get github.com/nu7hatch/gouuid
 
 run: finch .env
 	. .env && ./finch

@@ -2,11 +2,13 @@ package main
 
 import (
 	"database/sql"
+	"fmt"
 	"log"
 	"strings"
 	"time"
 
 	_ "github.com/mattn/go-sqlite3"
+	"github.com/nu7hatch/gouuid"
 )
 
 type Persistence struct {
@@ -195,7 +197,7 @@ func (p Persistence) GetChannelById(id int) (*Channel, error) {
 }
 
 func (p Persistence) GetPost(id int) (*Post, error) {
-	q := `select user_id, body, posted from post where id = ?`
+	q := `select user_id, uuid, body, posted from post where id = ?`
 	stmt, err := p.Database.Prepare(q)
 	if err != nil {
 		log.Fatal(err)
@@ -206,8 +208,9 @@ func (p Persistence) GetPost(id int) (*Post, error) {
 	var body string
 	var user_id int
 	var posted int
+	var uu string
 
-	err = stmt.QueryRow(id).Scan(&user_id, &body, &posted)
+	err = stmt.QueryRow(id).Scan(&user_id, &uu, &body, &posted)
 	if err != nil {
 		log.Println("error querying by post id", err)
 		return nil, err
@@ -219,11 +222,11 @@ func (p Persistence) GetPost(id int) (*Post, error) {
 		return nil, err
 	}
 	// TODO: also get channels
-	return &Post{Id: id, User: u, Body: body, Posted: posted}, nil
+	return &Post{Id: id, UUID: uu, User: u, Body: body, Posted: posted}, nil
 }
 
 func (p Persistence) GetAllPosts(limit int, offset int) ([]*Post, error) {
-	q := `select id, user_id, body, posted
+	q := `select id, uuid, user_id, body, posted
         from post order by posted desc limit ? offset ?`
 	stmt, err := p.Database.Prepare(q)
 	if err != nil {
@@ -244,12 +247,13 @@ func (p Persistence) GetAllPosts(limit int, offset int) ([]*Post, error) {
 		var user_id int
 		var body string
 		var posted int
-		rows.Scan(&id, &user_id, &body, &posted)
+		var uu string
+		rows.Scan(&id, &uu, &user_id, &body, &posted)
 		u, err := p.GetUserById(user_id)
 		if err != nil {
 			continue
 		}
-		post := &Post{Id: id, User: u, Body: body, Posted: posted}
+		post := &Post{Id: id, UUID: uu, User: u, Body: body, Posted: posted}
 		posts = append(posts, post)
 	}
 	return posts, nil
@@ -262,7 +266,14 @@ func (p *Persistence) AddPost(u User, body string, channels []*Channel) (*Post, 
 		log.Fatal(err)
 		return nil, err
 	}
-	q := `insert into post(user_id, body, posted) values(?, ?, ?)`
+
+	u4, err := uuid.NewV4()
+	if err != nil {
+		fmt.Println("error:", err)
+		return nil, err
+	}
+
+	q := `insert into post(user_id, uuid, body, posted) values(?, ?, ?, ?)`
 	stmt, err := tx.Prepare(q)
 	if err != nil {
 		log.Fatal(err)
@@ -270,7 +281,7 @@ func (p *Persistence) AddPost(u User, body string, channels []*Channel) (*Post, 
 	}
 	defer stmt.Close()
 
-	r, err := stmt.Exec(u.Id, body, time.Now().Unix())
+	r, err := stmt.Exec(u.Id, u4.String(), body, time.Now().Unix())
 	if err != nil {
 		log.Println("error inserting post", err)
 		return nil, err

@@ -8,6 +8,7 @@ import (
 
 type Post struct {
 	Id       int
+	UUID     string
 	User     *User
 	Body     string
 	Posted   int
