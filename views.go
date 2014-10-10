@@ -169,9 +169,37 @@ func userDispatch(w http.ResponseWriter, r *http.Request, ctx Context) {
 
 	if parts[3] == "p" {
 		// individual post
+		if len(parts) < 4 {
+			http.Error(w, "not found", 404)
+			return
+		}
+		puuid := parts[4]
+		p, err := ctx.P.GetPostByUUID(puuid)
+		if err != nil {
+			http.Error(w, "post not found", 404)
+			return
+		}
+		postPage(w, r, ctx, u, p)
+		return
 	}
 
-	fmt.Fprintf(w, "%v", u.Username)
+	fmt.Fprintf(w, "unknown page", 404)
+}
+
+type PostResponse struct {
+	Post *Post
+	SiteResponse
+}
+
+func postPage(w http.ResponseWriter, r *http.Request, ctx Context, u *User, p *Post) {
+	ctx.Populate(r)
+	pr := PostResponse{}
+	ctx.PopulateResponse(&pr)
+	pr.Post = p
+
+	tmpl := getTemplate("post.html")
+	tmpl.Execute(w, pr)
+
 }
 
 func userWebIndex(w http.ResponseWriter, r *http.Request, ctx Context, u *User) {

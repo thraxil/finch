@@ -1,0 +1,10 @@
+{{ define "title" }}Finch Post{{ end }}
+
+{{ define "content" }}
+
+{{.Post.RenderBody}}
+
+<p> - <a href="/u/{{.Post.User.Username}}/">{{.Post.User.Username}}</a>
+ @ {{.Post.Time}}</p>
+
+{{ end }}

@@ -225,6 +225,35 @@ func (p Persistence) GetPost(id int) (*Post, error) {
 	return &Post{Id: id, UUID: uu, User: u, Body: body, Posted: posted}, nil
 }
 
+func (p Persistence) GetPostByUUID(uu string) (*Post, error) {
+	q := `select id, user_id, body, posted from post where uuid = ?`
+	stmt, err := p.Database.Prepare(q)
+	if err != nil {
+		log.Fatal(err)
+		return nil, err
+	}
+	defer stmt.Close()
+
+	var body string
+	var id int
+	var user_id int
+	var posted int
+
+	err = stmt.QueryRow(uu).Scan(&id, &user_id, &body, &posted)
+	if err != nil {
+		log.Println("error querying by post id", err)
+		return nil, err
+	}
+
+	u, err := p.GetUserById(user_id)
+	if err != nil {
+		log.Println("error getting post user", err)
+		return nil, err
+	}
+	// TODO: also get channels
+	return &Post{Id: id, UUID: uu, User: u, Body: body, Posted: posted}, nil
+}
+
 func (p Persistence) GetAllPosts(limit int, offset int) ([]*Post, error) {
 	q := `select id, uuid, user_id, body, posted
         from post order by posted desc limit ? offset ?`
