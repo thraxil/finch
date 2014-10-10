@@ -28,6 +28,8 @@ func main() {
 	http.HandleFunc("/", makeHandler(indexHandler, ctx))
 	http.HandleFunc("/post/", makeHandler(postHandler, ctx))
 
+	http.HandleFunc("/u/", makeHandler(userDispatch, ctx))
+
 	// authy stuff
 	http.HandleFunc("/register/", makeHandler(registerHandler, ctx))
 	http.HandleFunc("/login/", makeHandler(loginHandler, ctx))

@@ -8,6 +8,8 @@ import (
 	"strconv"
 	"strings"
 	"text/template"
+
+	"github.com/gorilla/feeds"
 )
 
 type SiteResponse struct {
@@ -121,6 +123,86 @@ func postHandler(w http.ResponseWriter, r *http.Request, ctx Context) {
 		return
 	}
 	http.Redirect(w, r, "/", http.StatusFound)
+}
+
+func userDispatch(w http.ResponseWriter, r *http.Request, ctx Context) {
+	parts := strings.Split(r.URL.String(), "/")
+	if len(parts) < 4 {
+		http.Error(w, "bad request", 400)
+		return
+	}
+	if parts[1] != "u" {
+		http.Error(w, "bad request", 400)
+		return
+	}
+	username := parts[2]
+	u, found := ctx.P.GetUser(username)
+	if !found {
+		http.Error(w, "user doesn't exist", 404)
+		return
+	}
+	if len(parts) == 4 {
+		userWebIndex(w, r, ctx, u)
+		return
+	}
+
+	if parts[3] == "feed" {
+		userFeed(w, r, ctx, u)
+		return
+	}
+
+	if parts[3] == "c" {
+		// delegate to channel router
+	}
+
+	if parts[3] == "p" {
+		// individual post
+	}
+
+	fmt.Fprintf(w, "%v", u.Username)
+}
+
+func userWebIndex(w http.ResponseWriter, r *http.Request, ctx Context, u *User) {
+	fmt.Fprintf(w, "web index for user %s", u.Username)
+}
+
+func userFeed(w http.ResponseWriter, r *http.Request, ctx Context, u *User) {
+	base := "http://finch.thraxil.org"
+
+	all_posts, err := ctx.P.GetAllUserPosts(u, 50, 0)
+	if err != nil {
+		http.Error(w, "couldn't retrieve posts", 500)
+		return
+	}
+	if len(all_posts) == 0 {
+		http.Error(w, "no posts", 404)
+		return
+	}
+	latest := all_posts[0]
+
+	feed := &feeds.Feed{
+		Title:       "Finch Feed for " + u.Username,
+		Link:        &feeds.Link{Href: base + "/u/" + u.Username + "/feed/"},
+		Description: "Finch feed",
+		Author:      &feeds.Author{u.Username, "anders@columbia.edu"},
+		Created:     latest.Time(),
+	}
+	feed.Items = []*feeds.Item{}
+
+	const layout = "Jan 2, 2006 at 3:04pm (MST)"
+	for _, p := range all_posts {
+		feed.Items = append(feed.Items,
+			&feeds.Item{
+				Title:       u.Username + ": " + p.Time().UTC().Format(layout),
+				Link:        &feeds.Link{Href: base + p.URL()},
+				Description: p.Body,
+				Author:      &feeds.Author{u.Username, u.Username},
+				Created:     p.Time(),
+			})
+	}
+	atom, _ := feed.ToAtom()
+	w.Header().Set("Content-Type", "application/atom+xml")
+	fmt.Fprintf(w, atom)
 }
 
 func registerForm(w http.ResponseWriter, r *http.Request, ctx Context) {

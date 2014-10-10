@@ -260,6 +260,35 @@ func (p Persistence) GetAllPosts(limit int, offset int) ([]*Post, error) {
 
 }
 
+func (p Persistence) GetAllUserPosts(u *User, limit int, offset int) ([]*Post, error) {
+	q := `select id, uuid, body, posted
+        from post where user_id = ? order by posted desc limit ? offset ?`
+	stmt, err := p.Database.Prepare(q)
+	if err != nil {
+		log.Fatal(err)
+		return nil, err
+	}
+	defer stmt.Close()
+
+	posts := make([]*Post, 0)
+
+	rows, err := stmt.Query(u.Id, limit, offset)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var id int
+		var body string
+		var posted int
+		var uu string
+		rows.Scan(&id, &uu, &body, &posted)
+		post := &Post{Id: id, UUID: uu, User: u, Body: body, Posted: posted}
+		posts = append(posts, post)
+	}
+	return posts, nil
+}
+
 func (p *Persistence) AddPost(u User, body string, channels []*Channel) (*Post, error) {
 	tx, err := p.Database.Begin()
 	if err != nil {

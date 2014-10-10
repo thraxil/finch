@@ -3,6 +3,7 @@ install_deps:
 	go get github.com/gorilla/sessions
 	go get github.com/russross/blackfriday
 	go get github.com/nu7hatch/gouuid
+	go get github.com/gorilla/feeds
 
 run: finch .env
 	. .env && ./finch
