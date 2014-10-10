@@ -6,9 +6,20 @@
 
 
 {{ if .Username }}
+
+<div class="panel-group" id="accordion">
+  <div class="panel panel-default">
+    <div class="panel-heading">
+      <h4 class="panel-title">
+        <a data-toggle="collapse" data-parent="#accordion" href="#collapseOne">
+					Post
+        </a>
+      </h4>
+    </div>
+    <div id="collapseOne" class="panel-collapse collapse">
+      <div class="panel-body">
 <form action="/post/" method="post" class="form">
 	<fieldset>
-		<legend>Post</legend>
 
 		<div class="row">
 			<div class="col-lg-12">
@@ -39,6 +50,12 @@
 				
 	</fieldset>
 </form>
+
+      </div>
+    </div>
+  </div>
+</div>
+
 {{ end }}
 
 
