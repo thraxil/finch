@@ -152,7 +152,19 @@ func userDispatch(w http.ResponseWriter, r *http.Request, ctx Context) {
 	}
 
 	if parts[3] == "c" {
-		// delegate to channel router
+		slug := parts[4]
+		channel, err := ctx.P.GetChannel(*u, slug)
+		if err != nil {
+			http.Error(w, "channel not found", 404)
+		}
+		if len(parts) == 5 {
+			fmt.Fprintf(w, "channel index page for %s", channel.Label)
+			return
+		}
+		if parts[5] == "feed" {
+			channelFeed(w, r, ctx, u, channel)
+			return
+		}
 	}
 
 	if parts[3] == "p" {
@@ -184,6 +196,45 @@ func userFeed(w http.ResponseWriter, r *http.Request, ctx Context, u *User) {
 		Title:       "Finch Feed for " + u.Username,
 		Link:        &feeds.Link{Href: base + "/u/" + u.Username + "/feed/"},
 		Description: "Finch feed",
+		Author:      &feeds.Author{u.Username, "anders@columbia.edu"},
+		Created:     latest.Time(),
+	}
+	feed.Items = []*feeds.Item{}
+
+	const layout = "Jan 2, 2006 at 3:04pm (MST)"
+	for _, p := range all_posts {
+		feed.Items = append(feed.Items,
+			&feeds.Item{
+				Title:       u.Username + ": " + p.Time().UTC().Format(layout),
+				Link:        &feeds.Link{Href: base + p.URL()},
+				Description: p.Body,
+				Author:      &feeds.Author{u.Username, u.Username},
+				Created:     p.Time(),
+			})
+	}
+	atom, _ := feed.ToAtom()
+	w.Header().Set("Content-Type", "application/atom+xml")
+	fmt.Fprintf(w, atom)
+}
+
+func channelFeed(w http.ResponseWriter, r *http.Request, ctx Context, u *User, c *Channel) {
+	base := "http://finch.thraxil.org"
+
+	all_posts, err := ctx.P.GetAllPostsInChannel(*c, 50, 0)
+	if err != nil {
+		http.Error(w, "couldn't retrieve posts", 500)
+		return
+	}
+	if len(all_posts) == 0 {
+		http.Error(w, "no posts", 404)
+		return
+	}
+	latest := all_posts[0]
+
+	feed := &feeds.Feed{
+		Title:       "Finch Feed for " + u.Username + " / " + c.Label,
+		Link:        &feeds.Link{Href: base + "/u/" + u.Username + "/c/" + c.Slug + "/feed/"},
+		Description: "Finch Channel feed",
 		Author:      &feeds.Author{u.Username, "anders@columbia.edu"},
 		Created:     latest.Time(),
 	}

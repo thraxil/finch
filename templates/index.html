@@ -2,7 +2,8 @@
 
 {{ define "content" }}
 
-<h1>Finch</h1>
+{{ $username := .Username }}
+
 
 {{ if .Username }}
 <form action="/post/" method="post" class="form">
@@ -11,15 +12,15 @@
 
 		<div class="row">
 			<div class="col-lg-12">
-				<textarea class="form-control" name="body"></textarea>
+				<textarea class="form-control" name="body" rows="10"></textarea>
 			</div>
 		</div>
 
 		<div class="row">
 			<div class="col-lg-6">
 				{{ range .Channels }}
-				<input type="checkbox" name="channel_{{.Id}}" />
-				{{.Label}}<br />
+				<label><input type="checkbox" name="channel_{{.Id}}" />
+				{{.Label}}</label><br />
 				{{ end }}
 
 				<input type="text" name="new_channel0" placeholder="new channel 1"
@@ -40,9 +41,30 @@
 </form>
 {{ end }}
 
+
+<h1>Finch</h1>
+
+<div class="row">
+<div class="col-lg-6">
+<h2>Recent Posts</h2>
 {{ range .Posts }}
 <hr />
-{{.RenderBody}} - {{.User.Username}}
+{{.RenderBody}}
+
+<p> - <a href="/u/{{.User.Username}}/">{{.User.Username}}</a>
+ @ <a href="{{.URL}}">{{.Time}}</a></p>
 {{ end }}
+</div>
+
+<div class="col-lg-6">
+<h2>Channels</h2>
+
+{{ range .Channels }}
+	<a href="/u/{{$username}}/c/{{.Slug}}/">{{.Label}}</a><br />
+{{ end }}
+
+</div>
+
+</div>
 
 {{ end }}
