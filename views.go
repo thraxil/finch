@@ -141,7 +141,7 @@ func userDispatch(w http.ResponseWriter, r *http.Request, ctx Context) {
 		return
 	}
 	if len(parts) == 4 {
-		userWebIndex(w, r, ctx, u)
+		userIndex(w, r, ctx, u)
 		return
 	}
 
@@ -205,8 +205,25 @@ func postPage(w http.ResponseWriter, r *http.Request, ctx Context, u *User, p *P
 
 }
 
-func userWebIndex(w http.ResponseWriter, r *http.Request, ctx Context, u *User) {
-	fmt.Fprintf(w, "web index for user %s", u.Username)
+type UserIndexResponse struct {
+	User  *User
+	Posts []*Post
+	SiteResponse
+}
+
+func userIndex(w http.ResponseWriter, r *http.Request, ctx Context, u *User) {
+	ctx.Populate(r)
+	ir := UserIndexResponse{User: u}
+	ctx.PopulateResponse(&ir)
+
+	all_posts, err := ctx.P.GetAllUserPosts(u, 50, 0)
+	if err != nil {
+		http.Error(w, "couldn't retrieve posts", 500)
+		return
+	}
+	ir.Posts = all_posts
+	tmpl := getTemplate("user.html")
+	tmpl.Execute(w, ir)
 }
 
 func userFeed(w http.ResponseWriter, r *http.Request, ctx Context, u *User) {

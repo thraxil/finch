@@ -388,6 +388,13 @@ func (p Persistence) GetAllPostsInChannel(c Channel, limit int, offset int) ([]*
 			continue
 		}
 		post := &Post{Id: id, UUID: uu, User: u, Body: body, Posted: posted}
+
+		channels, err := p.GetPostChannels(post)
+
+		if err != nil {
+			return nil, err
+		}
+		post.Channels = channels
 		posts = append(posts, post)
 	}
 	return posts, nil
@@ -418,6 +425,12 @@ func (p Persistence) GetAllUserPosts(u *User, limit int, offset int) ([]*Post, e
 		var uu string
 		rows.Scan(&id, &uu, &body, &posted)
 		post := &Post{Id: id, UUID: uu, User: u, Body: body, Posted: posted}
+		channels, err := p.GetPostChannels(post)
+
+		if err != nil {
+			return nil, err
+		}
+		post.Channels = channels
 		posts = append(posts, post)
 	}
 	return posts, nil
