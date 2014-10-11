@@ -1,6 +1,20 @@
 {{ define "title" }}Finch Post{{ end }}
 
 {{ define "content" }}
+{{ $username := .Username }}
+
+<ol class="breadcrumb">
+	<li><a href="/">Home</a></li>
+	<li><a href="/u/{{.Post.User.Username}}/">{{.Post.User.Username}}</a></li>
+{{ if .Post.Channels }}
+	<li>
+		{{ range .Post.Channels }}
+		[<a href="/u/{{$username}}/c/{{.Slug}}/">{{.Label}}</a>]
+		{{ end }}
+</li>
+{{ end }}
+	<li class="active">{{.Post.Time}}</li>
+</ol>
 
 {{ if eq .Username .Post.User.Username }}
 <form action="delete/" method="post" class="form pull-right">

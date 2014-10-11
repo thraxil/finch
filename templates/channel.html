@@ -2,6 +2,12 @@
 
 {{ define "content" }}
 
+<ol class="breadcrumb">
+	<li><a href="/">Home</a></li>
+	<li><a href="/u/{{.Channel.User.Username}}/">{{.Channel.User.Username}}</a></li>
+	<li class="active">{{.Channel.Label}}</li>
+</ol>
+
 {{ if eq .Username .Channel.User.Username }}
 <form action="delete/" method="post" class="form pull-right">
 <input type="submit" value="delete channel" class="btn btn-xs btn-danger">

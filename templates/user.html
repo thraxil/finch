@@ -2,6 +2,11 @@
 
 {{ define "content" }}
 
+<ol class="breadcrumb">
+	<li><a href="/">Home</a></li>
+	<li class="active">{{.User.Username}}</li>
+</ol>
+
 <h2>User: {{.User.Username}}</h2>
 {{ range .Posts }}
 <div class="panel panel-default">
