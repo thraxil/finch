@@ -227,7 +227,7 @@ func userIndex(w http.ResponseWriter, r *http.Request, ctx Context, u *User) {
 }
 
 func userFeed(w http.ResponseWriter, r *http.Request, ctx Context, u *User) {
-	base := "http://finch.thraxil.org"
+	base := BASE_URL
 
 	all_posts, err := ctx.P.GetAllUserPosts(u, 50, 0)
 	if err != nil {
@@ -244,7 +244,7 @@ func userFeed(w http.ResponseWriter, r *http.Request, ctx Context, u *User) {
 		Title:       "Finch Feed for " + u.Username,
 		Link:        &feeds.Link{Href: base + "/u/" + u.Username + "/feed/"},
 		Description: "Finch feed",
-		Author:      &feeds.Author{u.Username, "anders@columbia.edu"},
+		Author:      &feeds.Author{u.Username, u.Username},
 		Created:     latest.Time(),
 	}
 	feed.Items = []*feeds.Item{}
@@ -266,7 +266,7 @@ func userFeed(w http.ResponseWriter, r *http.Request, ctx Context, u *User) {
 }
 
 func channelFeed(w http.ResponseWriter, r *http.Request, ctx Context, u *User, c *Channel) {
-	base := "http://finch.thraxil.org"
+	base := BASE_URL
 
 	all_posts, err := ctx.P.GetAllPostsInChannel(*c, 50, 0)
 	if err != nil {
@@ -283,7 +283,7 @@ func channelFeed(w http.ResponseWriter, r *http.Request, ctx Context, u *User, c
 		Title:       "Finch Feed for " + u.Username + " / " + c.Label,
 		Link:        &feeds.Link{Href: base + "/u/" + u.Username + "/c/" + c.Slug + "/feed/"},
 		Description: "Finch Channel feed",
-		Author:      &feeds.Author{u.Username, "anders@columbia.edu"},
+		Author:      &feeds.Author{u.Username, u.Username},
 		Created:     latest.Time(),
 	}
 	feed.Items = []*feeds.Item{}

@@ -2,7 +2,7 @@
 
 {{ define "content" }}
 
-<h2>{{.User.Username}}</h2>
+<h2>User: {{.User.Username}}</h2>
 {{ range .Posts }}
 <hr />
 {{.RenderBody}}
