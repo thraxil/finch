@@ -87,6 +87,32 @@ func (p *Persistence) CreateUser(username, password string) (*User, error) {
 	return u, nil
 }
 
+func (p Persistence) GetAllUsers() []*User {
+	q := `select id, username from users order by username ASC`
+	stmt, err := p.Database.Prepare(q)
+	if err != nil {
+		log.Fatal(err)
+		return nil
+	}
+	defer stmt.Close()
+
+	users := make([]*User, 0)
+
+	rows, err := stmt.Query()
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var id int
+		var username string
+		rows.Scan(&id, &username)
+		u := &User{Id: id, Username: username}
+		users = append(users, u)
+	}
+	return users
+}
+
 type Channel struct {
 	Id    int
 	User  *User
@@ -283,10 +309,47 @@ func (p Persistence) GetAllPosts(limit int, offset int) ([]*Post, error) {
 			continue
 		}
 		post := &Post{Id: id, UUID: uu, User: u, Body: body, Posted: posted}
+		channels, err := p.GetPostChannels(post)
+
+		if err != nil {
+			return nil, err
+		}
+		post.Channels = channels
+
 		posts = append(posts, post)
 	}
 	return posts, nil
+}
 
+func (p Persistence) GetPostChannels(post *Post) ([]*Channel, error) {
+	q := `select c.id, c.label, c.slug
+        from channel c, postchannel pc
+        where pc.channel_id = c.id
+          and pc.post_id = ?
+        order by c.label asc`
+	stmt, err := p.Database.Prepare(q)
+	if err != nil {
+		log.Fatal(err)
+		return nil, err
+	}
+	defer stmt.Close()
+
+	channels := make([]*Channel, 0)
+
+	rows, err := stmt.Query(post.Id)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var id int
+		var label string
+		var slug string
+		rows.Scan(&id, &label, &slug)
+		channel := &Channel{Id: id, User: post.User, Label: label, Slug: slug}
+		channels = append(channels, channel)
+	}
+	return channels, nil
 }
 
 func (p Persistence) GetAllPostsInChannel(c Channel, limit int, offset int) ([]*Post, error) {

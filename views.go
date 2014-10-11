@@ -68,7 +68,6 @@ func indexHandler(w http.ResponseWriter, r *http.Request, ctx Context) {
 	if ctx.User != nil {
 		ir.Channels = ctx.P.UserChannels(*ctx.User)
 	}
-
 	posts, err := ctx.P.GetAllPosts(50, 0)
 	ir.Posts = posts
 	if err != nil {
@@ -196,7 +195,11 @@ func postPage(w http.ResponseWriter, r *http.Request, ctx Context, u *User, p *P
 	pr := PostResponse{}
 	ctx.PopulateResponse(&pr)
 	pr.Post = p
-
+	channels, err := ctx.P.GetPostChannels(p)
+	if err != nil {
+		http.Error(w, "error retrieving channels", 500)
+	}
+	pr.Post.Channels = channels
 	tmpl := getTemplate("post.html")
 	tmpl.Execute(w, pr)
 

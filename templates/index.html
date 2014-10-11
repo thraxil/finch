@@ -29,9 +29,10 @@
 
 		<div class="row">
 			<div class="col-lg-6">
+
 				{{ range .Channels }}
 				<label><input type="checkbox" name="channel_{{.Id}}" />
-				{{.Label}}</label><br />
+				<span class="label label-default">{{.Label}}</span></label><br />
 				{{ end }}
 
 				<input type="text" name="new_channel0" placeholder="new channel 1"
@@ -61,8 +62,7 @@
 
 <h1>Finch</h1>
 
-<div class="row">
-<div class="col-lg-6">
+
 <h2>Recent Posts</h2>
 {{ range .Posts }}
 <hr />
@@ -70,18 +70,12 @@
 
 <p> - <a href="/u/{{.User.Username}}/">{{.User.Username}}</a>
  @ <a href="{{.URL}}">{{.Time}}</a></p>
-{{ end }}
-</div>
-
-<div class="col-lg-6">
-<h2>Channels</h2>
 
 {{ range .Channels }}
-	<a href="/u/{{$username}}/c/{{.Slug}}/">{{.Label}}</a><br />
+<a href="/u/{{.User.Username}}/c/{{.Slug}}/"><span class="label">{{.Label}}</span></a>
 {{ end }}
-
+{{ end }}
 </div>
 
-</div>
 
 {{ end }}
