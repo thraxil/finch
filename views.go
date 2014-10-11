@@ -156,8 +156,8 @@ func userDispatch(w http.ResponseWriter, r *http.Request, ctx Context) {
 		if err != nil {
 			http.Error(w, "channel not found", 404)
 		}
-		if len(parts) == 5 {
-			fmt.Fprintf(w, "channel index page for %s", channel.Label)
+		if len(parts) == 6 {
+			channelIndex(w, r, ctx, u, channel)
 			return
 		}
 		if parts[5] == "feed" {
@@ -182,7 +182,7 @@ func userDispatch(w http.ResponseWriter, r *http.Request, ctx Context) {
 		return
 	}
 
-	fmt.Fprintf(w, "unknown page", 404)
+	http.Error(w, "unknown page", 404)
 }
 
 type PostResponse struct {
@@ -285,6 +285,27 @@ func channelFeed(w http.ResponseWriter, r *http.Request, ctx Context, u *User, c
 	atom, _ := feed.ToAtom()
 	w.Header().Set("Content-Type", "application/atom+xml")
 	fmt.Fprintf(w, atom)
+}
+
+type ChannelIndexResponse struct {
+	Channel *Channel
+	Posts   []*Post
+	SiteResponse
+}
+
+func channelIndex(w http.ResponseWriter, r *http.Request, ctx Context, u *User, c *Channel) {
+	ctx.Populate(r)
+	ir := ChannelIndexResponse{Channel: c}
+	ctx.PopulateResponse(&ir)
+
+	all_posts, err := ctx.P.GetAllPostsInChannel(*c, 50, 0)
+	if err != nil {
+		http.Error(w, "couldn't retrieve posts", 500)
+		return
+	}
+	ir.Posts = all_posts
+	tmpl := getTemplate("channel.html")
+	tmpl.Execute(w, ir)
 }
 
 func registerForm(w http.ResponseWriter, r *http.Request, ctx Context) {

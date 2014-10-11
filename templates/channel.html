@@ -1,0 +1,19 @@
+{{ define "title" }}Finch: {{.Channel.Label}}{{ end }}
+
+{{ define "content" }}
+
+<h2>{{.Channel.Label}}</h2>
+{{ range .Posts }}
+<hr />
+{{.RenderBody}}
+
+<p> - <a href="/u/{{.User.Username}}/">{{.User.Username}}</a>
+ @ <a href="{{.URL}}">{{.Time}}</a></p>
+
+{{ range .Channels }}
+<a href="/u/{{.User.Username}}/c/{{.Slug}}/"><span class="label">{{.Label}}</span></a>
+{{ end }}
+{{ end }}
+</div>
+
+{{ end }}

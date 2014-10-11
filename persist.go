@@ -166,11 +166,15 @@ func (p *Persistence) AddChannels(u User, names []string) ([]*Channel, error) {
 			continue
 		}
 		slug := strings.ToLower(strings.Replace(label, " ", "_", -1))
-		_, err = stmt.Exec(u.Id, slug, label)
-		c, err := p.GetChannel(u, slug)
+		r, err := stmt.Exec(u.Id, slug, label)
+
+		id, err := r.LastInsertId()
 		if err != nil {
-			created = append(created, c)
+			log.Println("error getting last inserted id", err)
+			return nil, err
 		}
+		c := &Channel{Id: int(id), Slug: slug, Label: label, User: &u}
+		created = append(created, c)
 	}
 
 	tx.Commit()
@@ -451,7 +455,6 @@ func (p *Persistence) AddPost(u User, body string, channels []*Channel) (*Post, 
 		log.Println("error getting last inserted id", err)
 		return nil, err
 	}
-	log.Println("post id", int(id))
 
 	q2 := `insert into postchannel (post_id, channel_id) values (?, ?)`
 	cstmt, err := tx.Prepare(q2)
@@ -461,6 +464,9 @@ func (p *Persistence) AddPost(u User, body string, channels []*Channel) (*Post, 
 	}
 	defer cstmt.Close()
 	for _, c := range channels {
+		if c == nil {
+			continue
+		}
 		_, err = cstmt.Exec(int(id), c.Id)
 		if err != nil {
 			log.Println("error associating channel with post", err)
