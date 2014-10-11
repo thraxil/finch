@@ -181,6 +181,41 @@ func (p *Persistence) AddChannels(u User, names []string) ([]*Channel, error) {
 	return created, nil
 }
 
+func (p *Persistence) DeleteChannel(c *Channel) error {
+	q1 := `delete from postchannel where channel_id = ?`
+	q2 := `delete from channel where id = ?`
+
+	tx, err := p.Database.Begin()
+	if err != nil {
+		log.Fatal(err)
+		return err
+	}
+	stmt, err := tx.Prepare(q1)
+	if err != nil {
+		log.Fatal(err)
+		return err
+	}
+	defer stmt.Close()
+	_, err = stmt.Exec(c.Id)
+	if err != nil {
+		return err
+	}
+
+	stmt2, err := tx.Prepare(q2)
+	if err != nil {
+		log.Fatal(err)
+		return err
+	}
+	defer stmt2.Close()
+	_, err = stmt2.Exec(c.Id)
+	if err != nil {
+		return err
+	}
+
+	tx.Commit()
+	return nil
+}
+
 func (p Persistence) GetChannel(u User, slug string) (*Channel, error) {
 	q := `select id, label from channel where user_id = ? AND slug = ?`
 	stmt, err := p.Database.Prepare(q)

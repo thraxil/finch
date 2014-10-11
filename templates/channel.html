@@ -2,6 +2,12 @@
 
 {{ define "content" }}
 
+{{ if eq .Username .Channel.User.Username }}
+<form action="delete/" method="post" class="form pull-right">
+<input type="submit" value="delete channel" class="btn btn-xs btn-danger">
+</form>
+{{ end }}
+
 <h2>Channel: {{.Channel.Label}}</h2>
 {{ range .Posts }}
 <hr />

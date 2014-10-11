@@ -160,6 +160,10 @@ func userDispatch(w http.ResponseWriter, r *http.Request, ctx Context) {
 			channelIndex(w, r, ctx, u, channel)
 			return
 		}
+		if parts[5] == "delete" {
+			channelDelete(w, r, ctx, u, channel)
+			return
+		}
 		if parts[5] == "feed" {
 			channelFeed(w, r, ctx, u, channel)
 			return
@@ -263,6 +267,24 @@ func userFeed(w http.ResponseWriter, r *http.Request, ctx Context, u *User) {
 	atom, _ := feed.ToAtom()
 	w.Header().Set("Content-Type", "application/atom+xml")
 	fmt.Fprintf(w, atom)
+}
+
+func channelDelete(w http.ResponseWriter, r *http.Request, ctx Context, u *User, c *Channel) {
+	if r.Method != "POST" {
+		fmt.Fprintf(w, "POST only")
+		return
+	}
+	ctx.Populate(r)
+	if ctx.User == nil {
+		http.Redirect(w, r, "/login/", http.StatusFound)
+		return
+	}
+	if ctx.User.Id != c.User.Id {
+		http.Error(w, "you can only delete your own channels", 403)
+		return
+	}
+	ctx.P.DeleteChannel(c)
+	http.Redirect(w, r, "/", http.StatusFound)
 }
 
 func channelFeed(w http.ResponseWriter, r *http.Request, ctx Context, u *User, c *Channel) {
