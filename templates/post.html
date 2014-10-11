@@ -2,6 +2,13 @@
 
 {{ define "content" }}
 
+{{ if eq .Username .Post.User.Username }}
+<form action="delete/" method="post" class="form pull-right">
+<input type="submit" value="delete post" class="btn btn-xs btn-danger">
+</form>
+{{ end }}
+
+
 {{.Post.RenderBody}}
 
 <p> - <a href="/u/{{.Post.User.Username}}/">{{.Post.User.Username}}</a>

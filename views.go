@@ -182,8 +182,15 @@ func userDispatch(w http.ResponseWriter, r *http.Request, ctx Context) {
 			http.Error(w, "post not found", 404)
 			return
 		}
-		postPage(w, r, ctx, u, p)
-		return
+
+		if len(parts) == 6 {
+			postPage(w, r, ctx, u, p)
+			return
+		}
+		if parts[5] == "delete" {
+			postDelete(w, r, ctx, u, p)
+			return
+		}
 	}
 
 	http.Error(w, "unknown page", 404)
@@ -284,6 +291,24 @@ func channelDelete(w http.ResponseWriter, r *http.Request, ctx Context, u *User,
 		return
 	}
 	ctx.P.DeleteChannel(c)
+	http.Redirect(w, r, "/", http.StatusFound)
+}
+
+func postDelete(w http.ResponseWriter, r *http.Request, ctx Context, u *User, p *Post) {
+	if r.Method != "POST" {
+		fmt.Fprintf(w, "POST only")
+		return
+	}
+	ctx.Populate(r)
+	if ctx.User == nil {
+		http.Redirect(w, r, "/login/", http.StatusFound)
+		return
+	}
+	if ctx.User.Id != p.User.Id {
+		http.Error(w, "you can only delete your own posts", 403)
+		return
+	}
+	ctx.P.DeletePost(p)
 	http.Redirect(w, r, "/", http.StatusFound)
 }
 
