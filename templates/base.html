@@ -22,6 +22,7 @@ margin-bottom: 1em;}
 
     <ul class="nav navbar-nav pull-right">
 {{if .Username}}
+<li><a href="/u/{{.Username}}/">{{.Username}}</a></li>
 <li><a href="/logout/">logout</a></li>
 {{else}}
 <li><a href="/register/">register</a></li>

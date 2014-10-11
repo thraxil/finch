@@ -8,14 +8,21 @@
 </form>
 {{ end }}
 
+<div class="panel panel-default">
+  <div class="panel-body">
 
 {{.Post.RenderBody}}
 
-<p> - <a href="/u/{{.Post.User.Username}}/">{{.Post.User.Username}}</a>
- @ {{.Post.Time}}</p>
-
-{{ range .Post.Channels }}
+{{ if .Post.Channels }}
+<p>{{ range .Post.Channels }}
 <a href="/u/{{.User.Username}}/c/{{.Slug}}/"><span class="label">{{.Label}}</span></a>
+{{ end }}</p>
 {{ end }}
+
+
+<div class="panel-footer"><a href="/u/{{.Post.User.Username}}/">{{.Post.User.Username}}</a>
+ @ {{.Post.Time}}</div>
+
+</div></div>
 
 {{ end }}

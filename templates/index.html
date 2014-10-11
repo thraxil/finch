@@ -30,10 +30,12 @@
 		<div class="row">
 			<div class="col-lg-6">
 
+				<ul class="list-inline">
 				{{ range .Channels }}
-				<label><input type="checkbox" name="channel_{{.Id}}" />
-				<span class="label label-default">{{.Label}}</span></label><br />
+				<li><label><input type="checkbox" name="channel_{{.Id}}" />
+				{{.Label}}</label></li>
 				{{ end }}
+				</ul>
 
 				<input type="text" name="new_channel0" placeholder="new channel 1"
 							 class="form-control" />
@@ -65,16 +67,25 @@
 
 <h2>Recent Posts</h2>
 {{ range .Posts }}
-<hr />
+
+<div class="panel panel-default">
+  <div class="panel-body">
 {{.RenderBody}}
 
-<p> - <a href="/u/{{.User.Username}}/">{{.User.Username}}</a>
- @ <a href="{{.URL}}">{{.Time}}</a></p>
-
+{{ if .Channels }}
+<p>
 {{ range .Channels }}
 <a href="/u/{{.User.Username}}/c/{{.Slug}}/"><span class="label">{{.Label}}</span></a>
+{{ end }}</p>
 {{ end }}
+
+<div class="panel-footer"><a href="/u/{{.User.Username}}/">{{.User.Username}}</a>
+ @ <a href="{{.URL}}">{{.Time}}</a></div>
+
+</div></div>
+
 {{ end }}
+
 </div>
 
 
