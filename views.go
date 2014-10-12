@@ -293,7 +293,7 @@ func channelDelete(w http.ResponseWriter, r *http.Request, ctx Context, u *User,
 		http.Error(w, "you can only delete your own channels", 403)
 		return
 	}
-	ctx.Site.P.DeleteChannel(c)
+	ctx.Site.DeleteChannel(c)
 	http.Redirect(w, r, "/", http.StatusFound)
 }
 

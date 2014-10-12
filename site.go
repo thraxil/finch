@@ -9,15 +9,17 @@ type Site struct {
 	BaseUrl string
 	Store   sessions.Store
 
-	createUserChan chan *createUserOp
+	createUserChan    chan *createUserOp
+	deleteChannelChan chan *deleteChannelOp
 }
 
 func NewSite(p *Persistence, base string, store sessions.Store) *Site {
 	s := Site{
-		P:              p,
-		BaseUrl:        base,
-		Store:          store,
-		createUserChan: make(chan *createUserOp),
+		P:                 p,
+		BaseUrl:           base,
+		Store:             store,
+		createUserChan:    make(chan *createUserOp),
+		deleteChannelChan: make(chan *deleteChannelOp),
 	}
 	go s.Run()
 	return &s
@@ -26,9 +28,12 @@ func NewSite(p *Persistence, base string, store sessions.Store) *Site {
 func (s *Site) Run() {
 	for {
 		select {
-		case cuo := <-s.createUserChan:
-			u, err := s.P.CreateUser(cuo.Username, cuo.Password)
-			cuo.Resp <- userResponse{User: u, Err: err}
+		case op := <-s.createUserChan:
+			u, err := s.P.CreateUser(op.Username, op.Password)
+			op.Resp <- userResponse{User: u, Err: err}
+		case op := <-s.deleteChannelChan:
+			err := s.P.DeleteChannel(op.Channel)
+			op.Resp <- deleteChannelResponse{Err: err}
 		}
 	}
 }
@@ -50,4 +55,21 @@ func (s *Site) CreateUser(username, password string) (*User, error) {
 	s.createUserChan <- cuo
 	ur := <-r
 	return ur.User, ur.Err
+}
+
+type deleteChannelResponse struct {
+	Err error
+}
+
+type deleteChannelOp struct {
+	Channel *Channel
+	Resp    chan deleteChannelResponse
+}
+
+func (s *Site) DeleteChannel(c *Channel) error {
+	r := make(chan deleteChannelResponse)
+	op := &deleteChannelOp{Channel: c, Resp: r}
+	s.deleteChannelChan <- op
+	ur := <-r
+	return ur.Err
 }
