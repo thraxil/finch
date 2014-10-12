@@ -4,17 +4,6 @@ import (
 	"github.com/gorilla/sessions"
 )
 
-type userResponse struct {
-	User *User
-	Err  error
-}
-
-type createUserOp struct {
-	Username string
-	Password string
-	Resp     chan userResponse
-}
-
 type Site struct {
 	P       *Persistence
 	BaseUrl string
@@ -42,6 +31,17 @@ func (s *Site) Run() {
 			cuo.Resp <- userResponse{User: u, Err: err}
 		}
 	}
+}
+
+type userResponse struct {
+	User *User
+	Err  error
+}
+
+type createUserOp struct {
+	Username string
+	Password string
+	Resp     chan userResponse
 }
 
 func (s *Site) CreateUser(username, password string) (*User, error) {
