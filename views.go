@@ -94,7 +94,7 @@ func postHandler(w http.ResponseWriter, r *http.Request, s *Site) {
 	body := r.FormValue("body")
 	nchan := make([]string, 3)
 	nchan[0], nchan[1], nchan[2] = r.FormValue("new_channel0"), r.FormValue("new_channel1"), r.FormValue("new_channel2")
-	channels, err := s.P.AddChannels(*ctx.User, nchan)
+	channels, err := s.AddChannels(*ctx.User, nchan)
 	if err != nil {
 		log.Fatal(err)
 		fmt.Fprintf(w, "error making channels")

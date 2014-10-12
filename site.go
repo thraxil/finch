@@ -12,6 +12,7 @@ type Site struct {
 	createUserChan    chan *createUserOp
 	deleteChannelChan chan *deleteChannelOp
 	deletePostChan    chan *deletePostOp
+	addChannelsChan   chan *addChannelsOp
 }
 
 func NewSite(p *Persistence, base string, store sessions.Store) *Site {
@@ -22,6 +23,7 @@ func NewSite(p *Persistence, base string, store sessions.Store) *Site {
 		createUserChan:    make(chan *createUserOp),
 		deleteChannelChan: make(chan *deleteChannelOp),
 		deletePostChan:    make(chan *deletePostOp),
+		addChannelsChan:   make(chan *addChannelsOp),
 	}
 	go s.Run()
 	return &s
@@ -39,6 +41,9 @@ func (s *Site) Run() {
 		case op := <-s.deletePostChan:
 			err := s.P.DeletePost(op.Post)
 			op.Resp <- deletePostResponse{Err: err}
+		case op := <-s.addChannelsChan:
+			channels, err := s.P.AddChannels(op.User, op.Names)
+			op.Resp <- addChannelsResponse{Channels: channels, Err: err}
 		}
 	}
 }
@@ -94,4 +99,23 @@ func (s *Site) DeletePost(c *Post) error {
 	s.deletePostChan <- op
 	ur := <-r
 	return ur.Err
+}
+
+type addChannelsResponse struct {
+	Channels []*Channel
+	Err      error
+}
+
+type addChannelsOp struct {
+	User  User
+	Names []string
+	Resp  chan addChannelsResponse
+}
+
+func (s *Site) AddChannels(u User, names []string) ([]*Channel, error) {
+	r := make(chan addChannelsResponse)
+	op := &addChannelsOp{User: u, Names: names, Resp: r}
+	s.addChannelsChan <- op
+	ur := <-r
+	return ur.Channels, ur.Err
 }
