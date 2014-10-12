@@ -31,6 +31,10 @@ func NewSite(p *Persistence, base string, store sessions.Store) *Site {
 	return &s
 }
 
+/*
+All database operations run through here to guarantee
+that there is never more than one happening at a time.
+*/
 func (s *Site) Run() {
 	for {
 		select {
