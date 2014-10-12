@@ -214,7 +214,7 @@ func postPage(w http.ResponseWriter, r *http.Request, ctx Context, u *User, p *P
 	pr := PostResponse{}
 	ctx.PopulateResponse(&pr)
 	pr.Post = p
-	channels, err := ctx.Site.P.GetPostChannels(p)
+	channels, err := ctx.Site.GetPostChannels(p)
 	if err != nil {
 		http.Error(w, "error retrieving channels", 500)
 	}
