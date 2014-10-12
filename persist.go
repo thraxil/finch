@@ -95,7 +95,7 @@ type Channel struct {
 }
 
 func (p Persistence) GetUserChannels(u User) ([]*Channel, error) {
-	q := `select id, slug, label from channel where user_id = ?`
+	q := `select id, slug, label from channel where user_id = ? order by slug asc`
 	stmt, err := p.Database.Prepare(q)
 	if err != nil {
 		log.Fatal(err)
@@ -374,7 +374,7 @@ func (p Persistence) GetPostChannels(post *Post) ([]*Channel, error) {
         from channel c, postchannel pc
         where pc.channel_id = c.id
           and pc.post_id = ?
-        order by c.label asc`
+        order by c.slug asc`
 	stmt, err := p.Database.Prepare(q)
 	if err != nil {
 		log.Fatal(err)
