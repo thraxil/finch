@@ -1,0 +1,37 @@
+{{ define "title" }}Finch: search results for "{{.Q}}"{{ end }}
+
+{{ define "content" }}
+
+{{ $username := .Username }}
+<ol class="breadcrumb">
+	<li><a href="/">Home</a></li>
+	<li class="active">Search</li>
+</ol>
+
+
+<h2>Search Results for "{{.Q}}":</h2>
+
+{{ range .Posts }}
+
+<div class="panel panel-default">
+  <div class="panel-body">
+{{.RenderBody}}
+
+{{ if .Channels }}
+<p>
+{{ range .Channels }}
+<a href="/u/{{.User.Username}}/c/{{.Slug}}/"><span class="label">{{.Label}}</span></a>
+{{ end }}</p>
+{{ end }}
+
+<div class="panel-footer"><a href="/u/{{.User.Username}}/">{{.User.Username}}</a>
+ @ <a href="{{.URL}}">{{.Time}}</a></div>
+
+</div></div>
+
+{{ end }}
+
+</div>
+
+
+{{ end }}

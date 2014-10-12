@@ -27,6 +27,7 @@ func main() {
 
 	http.HandleFunc("/", makeHandler(indexHandler, s))
 	http.HandleFunc("/post/", makeHandler(postHandler, s))
+	http.HandleFunc("/search/", makeHandler(searchHandler, s))
 
 	http.HandleFunc("/u/", makeHandler(userDispatch, s))
 

@@ -445,6 +445,50 @@ func (p Persistence) GetAllPostsInChannel(c Channel, limit int, offset int) ([]*
 
 }
 
+func (p Persistence) SearchPosts(query string, limit int, offset int) ([]*Post, error) {
+	q := `select p.id, p.uuid, p.user_id, p.body, p.posted
+        from post p
+        where p.body like ?
+        order by p.posted desc limit ? offset ?`
+	stmt, err := p.Database.Prepare(q)
+	if err != nil {
+		log.Fatal(err)
+		return nil, err
+	}
+	defer stmt.Close()
+
+	posts := make([]*Post, 0)
+
+	rows, err := stmt.Query("%"+query+"%", limit, offset)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var id int
+		var user_id int
+		var body string
+		var posted int
+		var uu string
+		rows.Scan(&id, &uu, &user_id, &body, &posted)
+		u, err := p.getUserById(user_id)
+		if err != nil {
+			continue
+		}
+		post := &Post{Id: id, UUID: uu, User: u, Body: body, Posted: posted}
+
+		channels, err := p.GetPostChannels(post)
+
+		if err != nil {
+			return nil, err
+		}
+		post.Channels = channels
+		posts = append(posts, post)
+	}
+	return posts, nil
+
+}
+
 func (p Persistence) GetAllUserPosts(u *User, limit int, offset int) ([]*Post, error) {
 	q := `select id, uuid, body, posted
         from post where user_id = ? order by posted desc limit ? offset ?`
