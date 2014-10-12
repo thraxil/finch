@@ -235,7 +235,7 @@ func userIndex(w http.ResponseWriter, r *http.Request, ctx Context, u *User) {
 	ir := UserIndexResponse{User: u}
 	ctx.PopulateResponse(&ir)
 
-	all_posts, err := ctx.Site.P.GetAllUserPosts(u, 50, 0)
+	all_posts, err := ctx.Site.GetAllUserPosts(u, 50, 0)
 	if err != nil {
 		http.Error(w, "couldn't retrieve posts", 500)
 		return
@@ -248,7 +248,7 @@ func userIndex(w http.ResponseWriter, r *http.Request, ctx Context, u *User) {
 func userFeed(w http.ResponseWriter, r *http.Request, ctx Context, u *User) {
 	base := ctx.Site.BaseUrl
 
-	all_posts, err := ctx.Site.P.GetAllUserPosts(u, 50, 0)
+	all_posts, err := ctx.Site.GetAllUserPosts(u, 50, 0)
 	if err != nil {
 		http.Error(w, "couldn't retrieve posts", 500)
 		return

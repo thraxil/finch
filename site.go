@@ -22,6 +22,7 @@ type Site struct {
 	getUserChannelsChan      chan *getUserChannelsOp
 	getAllPostsChan          chan *getAllPostsOp
 	getAllPostsInChannelChan chan *getAllPostsInChannelOp
+	getAllUserPostsChan      chan *getAllUserPostsOp
 }
 
 func NewSite(p *Persistence, base string, store sessions.Store) *Site {
@@ -40,6 +41,7 @@ func NewSite(p *Persistence, base string, store sessions.Store) *Site {
 		getUserChannelsChan:      make(chan *getUserChannelsOp),
 		getAllPostsChan:          make(chan *getAllPostsOp),
 		getAllPostsInChannelChan: make(chan *getAllPostsInChannelOp),
+		getAllUserPostsChan:      make(chan *getAllUserPostsOp),
 	}
 	go s.Run()
 	return &s
@@ -67,6 +69,9 @@ func (s *Site) Run() {
 			op.Resp <- postsResponse{Posts: posts, Err: err}
 		case op := <-s.getAllPostsInChannelChan:
 			posts, err := s.P.GetAllPostsInChannel(op.Channel, op.Limit, op.Offset)
+			op.Resp <- postsResponse{Posts: posts, Err: err}
+		case op := <-s.getAllUserPostsChan:
+			posts, err := s.P.GetAllUserPosts(op.User, op.Limit, op.Offset)
 			op.Resp <- postsResponse{Posts: posts, Err: err}
 
 		// then writes
@@ -251,6 +256,21 @@ func (s *Site) GetAllPostsInChannel(c Channel, limit, offset int) ([]*Post, erro
 	r := make(chan postsResponse)
 	op := &getAllPostsInChannelOp{Channel: c, Limit: limit, Offset: offset, Resp: r}
 	s.getAllPostsInChannelChan <- op
+	ur := <-r
+	return ur.Posts, ur.Err
+}
+
+type getAllUserPostsOp struct {
+	User   *User
+	Limit  int
+	Offset int
+	Resp   chan postsResponse
+}
+
+func (s *Site) GetAllUserPosts(u *User, limit, offset int) ([]*Post, error) {
+	r := make(chan postsResponse)
+	op := &getAllUserPostsOp{User: u, Limit: limit, Offset: offset, Resp: r}
+	s.getAllUserPostsChan <- op
 	ur := <-r
 	return ur.Posts, ur.Err
 }
