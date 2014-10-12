@@ -1,0 +1,47 @@
+{{ define "title" }}Finch{{ end }}
+
+{{ define "content" }}
+
+{{ $username := .Username }}
+<ol class="breadcrumb">
+	<li><a href="/">Home</a></li>
+	<li class="active">Add</li>
+</ol>
+
+<form action="/post/" method="post" class="form">
+	<fieldset>
+
+		<div class="row">
+			<div class="col-lg-12">
+				<textarea class="form-control" name="body" rows="10"></textarea>
+			</div>
+		</div>
+
+		<div class="row">
+			<div class="col-lg-6">
+
+				<ul class="list-inline">
+				{{ range .Channels }}
+				<li><label><input type="checkbox" name="channel_{{.Id}}" />
+				{{.Label}}</label></li>
+				{{ end }}
+				</ul>
+
+				<input type="text" name="new_channel0" placeholder="new channel 1"
+							 class="form-control" />
+
+				<input type="text" name="new_channel1" placeholder="new channel 2"
+							 class="form-control" />
+
+				<input type="text" name="new_channel2" placeholder="new channel 3"
+							 class="form-control" />
+			</div>
+			<div class="col-lg-6">
+				<input type="submit" class="btn btn-primary" />
+			</div>
+		</div>
+				
+	</fieldset>
+</form>
+
+{{ end }}

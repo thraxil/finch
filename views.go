@@ -56,8 +56,7 @@ func (c Context) PopulateResponse(sr SR) {
 }
 
 type IndexResponse struct {
-	Channels []*Channel
-	Posts    []*Post
+	Posts []*Post
 	SiteResponse
 }
 
@@ -66,14 +65,6 @@ func indexHandler(w http.ResponseWriter, r *http.Request, s *Site) {
 	ctx.Populate(r)
 	ir := IndexResponse{}
 	ctx.PopulateResponse(&ir)
-	if ctx.User != nil {
-		c, err := s.GetUserChannels(*ctx.User)
-		if err != nil {
-			http.Error(w, "couldn't get channels", 500)
-			return
-		}
-		ir.Channels = c
-	}
 	posts, err := s.GetAllPosts(50, 0)
 	ir.Posts = posts
 	if err != nil {
@@ -85,15 +76,29 @@ func indexHandler(w http.ResponseWriter, r *http.Request, s *Site) {
 	tmpl.Execute(w, ir)
 }
 
+type AddResponse struct {
+	Channels []*Channel
+	SiteResponse
+}
+
 func postHandler(w http.ResponseWriter, r *http.Request, s *Site) {
-	if r.Method != "POST" {
-		fmt.Fprintf(w, "POST only")
-		return
-	}
 	ctx := Context{Site: s}
 	ctx.Populate(r)
 	if ctx.User == nil {
 		http.Redirect(w, r, "/login/", http.StatusFound)
+		return
+	}
+	if r.Method != "POST" {
+		ar := AddResponse{}
+		ctx.PopulateResponse(&ar)
+		c, err := s.GetUserChannels(*ctx.User)
+		if err != nil {
+			http.Error(w, "couldn't get channels", 500)
+			return
+		}
+		ar.Channels = c
+		tmpl := getTemplate("add.html")
+		tmpl.Execute(w, ar)
 		return
 	}
 	body := r.FormValue("body")

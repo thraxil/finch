@@ -17,6 +17,9 @@ margin-bottom: 1em;}
   <div class="container">
     <a class="navbar-brand active" href="/"><span class="glyphicon glyphicon-home"></span></a>
     <ul class="nav navbar-nav">
+{{if .Username}}
+                        <li><a href="/post/"><span class="glyphicon glyphicon-plus"></span></a></li>
+{{end}}
 
     </ul>
 
