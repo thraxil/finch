@@ -10,7 +10,6 @@ import (
 	"text/template"
 
 	"github.com/gorilla/feeds"
-	"github.com/gorilla/sessions"
 )
 
 type SiteResponse struct {
@@ -32,12 +31,6 @@ type SR interface {
 
 func faviconHandler(w http.ResponseWriter, r *http.Request) {
 	// just ignore this crap
-}
-
-type Site struct {
-	P       *Persistence
-	BaseUrl string
-	Store   sessions.Store
 }
 
 type Context struct {
