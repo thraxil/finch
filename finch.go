@@ -23,7 +23,8 @@ func main() {
 	s := NewSite(
 		p,
 		os.Getenv("FINCH_BASE_URL"),
-		sessions.NewCookieStore([]byte(os.Getenv("FINCH_SECRET"))))
+		sessions.NewCookieStore([]byte(os.Getenv("FINCH_SECRET"))),
+		os.Getenv("FINCH_ITEMS_PER_PAGE"))
 
 	http.HandleFunc("/", makeHandler(indexHandler, s))
 	http.HandleFunc("/post/", makeHandler(postHandler, s))

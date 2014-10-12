@@ -1,13 +1,16 @@
 package main
 
 import (
+	"strconv"
+
 	"github.com/gorilla/sessions"
 )
 
 type Site struct {
-	p       *Persistence
-	BaseUrl string
-	Store   sessions.Store
+	p            *Persistence
+	BaseUrl      string
+	Store        sessions.Store
+	ItemsPerPage int
 
 	// write operation channels
 	createUserChan    chan *createUserOp
@@ -29,11 +32,16 @@ type Site struct {
 	searchPostsChan          chan *searchPostsOp
 }
 
-func NewSite(p *Persistence, base string, store sessions.Store) *Site {
+func NewSite(p *Persistence, base string, store sessions.Store, ipp string) *Site {
+	i, err := strconv.Atoi(ipp)
+	if err != nil {
+		i = 50
+	}
 	s := Site{
 		p:                 p,
 		BaseUrl:           base,
 		Store:             store,
+		ItemsPerPage:      i,
 		createUserChan:    make(chan *createUserOp),
 		deleteChannelChan: make(chan *deleteChannelOp),
 		deletePostChan:    make(chan *deletePostOp),
