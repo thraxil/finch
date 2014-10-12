@@ -5,7 +5,7 @@ import (
 )
 
 type Site struct {
-	P       *Persistence
+	p       *Persistence
 	BaseUrl string
 	Store   sessions.Store
 
@@ -30,7 +30,7 @@ type Site struct {
 
 func NewSite(p *Persistence, base string, store sessions.Store) *Site {
 	s := Site{
-		P:                 p,
+		p:                 p,
 		BaseUrl:           base,
 		Store:             store,
 		createUserChan:    make(chan *createUserOp),
@@ -62,48 +62,48 @@ func (s *Site) Run() {
 		select {
 		// reads first
 		case op := <-s.getUserChan:
-			u, err := s.P.GetUser(op.Username)
+			u, err := s.p.GetUser(op.Username)
 			op.Resp <- userResponse{User: u, Err: err}
 		case op := <-s.getPostByUUIDChan:
-			p, err := s.P.GetPostByUUID(op.UUID)
+			p, err := s.p.GetPostByUUID(op.UUID)
 			op.Resp <- postResponse{Post: p, Err: err}
 		case op := <-s.getUserChannelsChan:
-			channels, err := s.P.GetUserChannels(op.User)
+			channels, err := s.p.GetUserChannels(op.User)
 			op.Resp <- channelsResponse{Channels: channels, Err: err}
 		case op := <-s.getAllPostsChan:
-			posts, err := s.P.GetAllPosts(op.Limit, op.Offset)
+			posts, err := s.p.GetAllPosts(op.Limit, op.Offset)
 			op.Resp <- postsResponse{Posts: posts, Err: err}
 		case op := <-s.getAllPostsInChannelChan:
-			posts, err := s.P.GetAllPostsInChannel(op.Channel, op.Limit, op.Offset)
+			posts, err := s.p.GetAllPostsInChannel(op.Channel, op.Limit, op.Offset)
 			op.Resp <- postsResponse{Posts: posts, Err: err}
 		case op := <-s.getAllUserPostsChan:
-			posts, err := s.P.GetAllUserPosts(op.User, op.Limit, op.Offset)
+			posts, err := s.p.GetAllUserPosts(op.User, op.Limit, op.Offset)
 			op.Resp <- postsResponse{Posts: posts, Err: err}
 		case op := <-s.getChannelChan:
-			channel, err := s.P.GetChannel(op.User, op.Slug)
+			channel, err := s.p.GetChannel(op.User, op.Slug)
 			op.Resp <- channelResponse{Channel: channel, Err: err}
 		case op := <-s.getChannelByIdChan:
-			channel, err := s.P.GetChannelById(op.Id)
+			channel, err := s.p.GetChannelById(op.Id)
 			op.Resp <- channelResponse{Channel: channel, Err: err}
 		case op := <-s.getPostChannelsChan:
-			channels, err := s.P.GetPostChannels(op.Post)
+			channels, err := s.p.GetPostChannels(op.Post)
 			op.Resp <- channelsResponse{Channels: channels, Err: err}
 
 		// then writes
 		case op := <-s.createUserChan:
-			u, err := s.P.CreateUser(op.Username, op.Password)
+			u, err := s.p.CreateUser(op.Username, op.Password)
 			op.Resp <- userResponse{User: u, Err: err}
 		case op := <-s.deleteChannelChan:
-			err := s.P.DeleteChannel(op.Channel)
+			err := s.p.DeleteChannel(op.Channel)
 			op.Resp <- deleteChannelResponse{Err: err}
 		case op := <-s.deletePostChan:
-			err := s.P.DeletePost(op.Post)
+			err := s.p.DeletePost(op.Post)
 			op.Resp <- deletePostResponse{Err: err}
 		case op := <-s.addChannelsChan:
-			channels, err := s.P.AddChannels(op.User, op.Names)
+			channels, err := s.p.AddChannels(op.User, op.Names)
 			op.Resp <- channelsResponse{Channels: channels, Err: err}
 		case op := <-s.addPostChan:
-			post, err := s.P.AddPost(op.User, op.Body, op.Channels)
+			post, err := s.p.AddPost(op.User, op.Body, op.Channels)
 			op.Resp <- postResponse{Post: post, Err: err}
 
 		}
