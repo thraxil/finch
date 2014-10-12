@@ -23,6 +23,8 @@ type Site struct {
 	getAllPostsChan          chan *getAllPostsOp
 	getAllPostsInChannelChan chan *getAllPostsInChannelOp
 	getAllUserPostsChan      chan *getAllUserPostsOp
+	getChannelChan           chan *getChannelOp
+	getChannelByIdChan       chan *getChannelByIdOp
 }
 
 func NewSite(p *Persistence, base string, store sessions.Store) *Site {
@@ -42,6 +44,8 @@ func NewSite(p *Persistence, base string, store sessions.Store) *Site {
 		getAllPostsChan:          make(chan *getAllPostsOp),
 		getAllPostsInChannelChan: make(chan *getAllPostsInChannelOp),
 		getAllUserPostsChan:      make(chan *getAllUserPostsOp),
+		getChannelChan:           make(chan *getChannelOp),
+		getChannelByIdChan:       make(chan *getChannelByIdOp),
 	}
 	go s.Run()
 	return &s
@@ -73,6 +77,12 @@ func (s *Site) Run() {
 		case op := <-s.getAllUserPostsChan:
 			posts, err := s.P.GetAllUserPosts(op.User, op.Limit, op.Offset)
 			op.Resp <- postsResponse{Posts: posts, Err: err}
+		case op := <-s.getChannelChan:
+			channel, err := s.P.GetChannel(op.User, op.Slug)
+			op.Resp <- channelResponse{Channel: channel, Err: err}
+		case op := <-s.getChannelByIdChan:
+			channel, err := s.P.GetChannelById(op.Id)
+			op.Resp <- channelResponse{Channel: channel, Err: err}
 
 		// then writes
 		case op := <-s.createUserChan:
@@ -178,6 +188,38 @@ func (s *Site) AddChannels(u User, names []string) ([]*Channel, error) {
 	s.addChannelsChan <- op
 	ur := <-r
 	return ur.Channels, ur.Err
+}
+
+type channelResponse struct {
+	Channel *Channel
+	Err     error
+}
+
+type getChannelOp struct {
+	User User
+	Slug string
+	Resp chan channelResponse
+}
+
+func (s *Site) GetChannel(u User, slug string) (*Channel, error) {
+	r := make(chan channelResponse)
+	op := &getChannelOp{User: u, Slug: slug, Resp: r}
+	s.getChannelChan <- op
+	ur := <-r
+	return ur.Channel, ur.Err
+}
+
+type getChannelByIdOp struct {
+	Id   int
+	Resp chan channelResponse
+}
+
+func (s *Site) GetChannelById(id int) (*Channel, error) {
+	r := make(chan channelResponse)
+	op := &getChannelByIdOp{Id: id, Resp: r}
+	s.getChannelByIdChan <- op
+	ur := <-r
+	return ur.Channel, ur.Err
 }
 
 type getUserChannelsOp struct {

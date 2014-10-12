@@ -114,7 +114,7 @@ func postHandler(w http.ResponseWriter, r *http.Request, s *Site) {
 				// couldn't parse it for some reason
 				continue
 			}
-			c, err := s.P.GetChannelById(id)
+			c, err := s.GetChannelById(id)
 			if err != nil {
 				continue
 			}
@@ -160,7 +160,7 @@ func userDispatch(w http.ResponseWriter, r *http.Request, s *Site) {
 
 	if parts[3] == "c" {
 		slug := parts[4]
-		channel, err := s.P.GetChannel(*u, slug)
+		channel, err := s.GetChannel(*u, slug)
 		if err != nil {
 			http.Error(w, "channel not found", 404)
 		}
