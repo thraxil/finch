@@ -239,8 +239,9 @@ func postPage(w http.ResponseWriter, r *http.Request, ctx Context, u *User, p *P
 }
 
 type UserIndexResponse struct {
-	User  *User
-	Posts []*Post
+	User     *User
+	Posts    []*Post
+	Channels []*Channel
 	SiteResponse
 }
 
@@ -255,6 +256,13 @@ func userIndex(w http.ResponseWriter, r *http.Request, ctx Context, u *User) {
 		return
 	}
 	ir.Posts = all_posts
+	c, err := ctx.Site.GetUserChannels(*u)
+	if err != nil {
+		http.Error(w, "couldn't get channels", 500)
+		return
+	}
+	ir.Channels = c
+
 	tmpl := getTemplate("user.html")
 	tmpl.Execute(w, ir)
 }

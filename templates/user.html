@@ -1,6 +1,7 @@
 {{ define "title" }}Finch: {{.User.Username}}{{ end }}
 
 {{ define "content" }}
+{{ $username := .Username }}
 
 <ol class="breadcrumb">
 	<li><a href="/">Home</a></li>
@@ -8,6 +9,18 @@
 </ol>
 
 <h2><a href="feed/"><img src="/media/feed.svg" width="20" height="20" /></a> User: {{.User.Username}}</h2>
+
+{{ if .Channels }}
+<div class="panel panel-info">
+	<div class="panel-heading">Channels</div>
+  <div class="panel-body">
+{{ range .Channels }}
+<a href="/u/{{$username}}/c/{{.Slug}}/" class="btn btn-info">{{.Label}}</a>
+{{ end }}
+</div></div>
+{{ end }}
+
+
 {{ range .Posts }}
 <div class="panel panel-default">
   <div class="panel-body">
