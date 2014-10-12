@@ -78,6 +78,7 @@ func indexHandler(w http.ResponseWriter, r *http.Request, s *Site) {
 
 type AddResponse struct {
 	Channels []*Channel
+	Body     string
 	SiteResponse
 }
 
@@ -97,6 +98,14 @@ func postHandler(w http.ResponseWriter, r *http.Request, s *Site) {
 			return
 		}
 		ar.Channels = c
+		url := r.FormValue("url")
+		title := r.FormValue("title")
+		if url != "" {
+			if title == "" {
+				title = url
+			}
+			ar.Body = "[" + title + "](" + url + ")"
+		}
 		tmpl := getTemplate("add.html")
 		tmpl.Execute(w, ar)
 		return
