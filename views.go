@@ -104,7 +104,7 @@ func postHandler(w http.ResponseWriter, r *http.Request, s *Site) {
 			if title == "" {
 				title = url
 			}
-			ar.Body = "[" + title + "](" + url + ")"
+			ar.Body = "#### [" + title + "](" + url + ")\n\n"
 		}
 		tmpl := getTemplate("add.html")
 		tmpl.Execute(w, ar)
