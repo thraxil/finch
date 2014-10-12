@@ -117,7 +117,7 @@ func postHandler(w http.ResponseWriter, r *http.Request, s *Site) {
 		}
 	}
 
-	_, err = s.P.AddPost(*ctx.User, body, channels)
+	_, err = s.AddPost(*ctx.User, body, channels)
 	if err != nil {
 		log.Fatal(err)
 		fmt.Fprintf(w, "could not add post")
