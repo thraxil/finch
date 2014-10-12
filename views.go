@@ -67,7 +67,12 @@ func indexHandler(w http.ResponseWriter, r *http.Request, s *Site) {
 	ir := IndexResponse{}
 	ctx.PopulateResponse(&ir)
 	if ctx.User != nil {
-		ir.Channels = s.P.UserChannels(*ctx.User)
+		c, err := s.GetUserChannels(*ctx.User)
+		if err != nil {
+			http.Error(w, "couldn't get channels", 500)
+			return
+		}
+		ir.Channels = c
 	}
 	posts, err := s.P.GetAllPosts(50, 0)
 	ir.Posts = posts

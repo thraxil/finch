@@ -120,12 +120,12 @@ type Channel struct {
 	Label string
 }
 
-func (p Persistence) UserChannels(u User) []*Channel {
+func (p Persistence) GetUserChannels(u User) ([]*Channel, error) {
 	q := `select id, slug, label from channel where user_id = ?`
 	stmt, err := p.Database.Prepare(q)
 	if err != nil {
 		log.Fatal(err)
-		return nil
+		return nil, err
 	}
 	defer stmt.Close()
 
@@ -133,7 +133,7 @@ func (p Persistence) UserChannels(u User) []*Channel {
 
 	rows, err := stmt.Query(u.Id)
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
 	defer rows.Close()
 	for rows.Next() {
@@ -144,7 +144,7 @@ func (p Persistence) UserChannels(u User) []*Channel {
 		c := &Channel{Id: id, Slug: slug, Label: label}
 		channels = append(channels, c)
 	}
-	return channels
+	return channels, nil
 }
 
 func (p *Persistence) AddChannels(u User, names []string) ([]*Channel, error) {

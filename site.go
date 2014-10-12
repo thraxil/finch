@@ -17,8 +17,9 @@ type Site struct {
 	addPostChan       chan *addPostOp
 
 	// read operation channels
-	getUserChan       chan *getUserOp
-	getPostByUUIDChan chan *getPostByUUIDOp
+	getUserChan         chan *getUserOp
+	getPostByUUIDChan   chan *getPostByUUIDOp
+	getUserChannelsChan chan *getUserChannelsOp
 }
 
 func NewSite(p *Persistence, base string, store sessions.Store) *Site {
@@ -32,8 +33,9 @@ func NewSite(p *Persistence, base string, store sessions.Store) *Site {
 		addChannelsChan:   make(chan *addChannelsOp),
 		addPostChan:       make(chan *addPostOp),
 
-		getUserChan:       make(chan *getUserOp),
-		getPostByUUIDChan: make(chan *getPostByUUIDOp),
+		getUserChan:         make(chan *getUserOp),
+		getPostByUUIDChan:   make(chan *getPostByUUIDOp),
+		getUserChannelsChan: make(chan *getUserChannelsOp),
 	}
 	go s.Run()
 	return &s
@@ -53,6 +55,9 @@ func (s *Site) Run() {
 		case op := <-s.getPostByUUIDChan:
 			p, err := s.P.GetPostByUUID(op.UUID)
 			op.Resp <- postResponse{Post: p, Err: err}
+		case op := <-s.getUserChannelsChan:
+			channels, err := s.P.GetUserChannels(op.User)
+			op.Resp <- channelsResponse{Channels: channels, Err: err}
 
 		// then writes
 		case op := <-s.createUserChan:
@@ -66,7 +71,7 @@ func (s *Site) Run() {
 			op.Resp <- deletePostResponse{Err: err}
 		case op := <-s.addChannelsChan:
 			channels, err := s.P.AddChannels(op.User, op.Names)
-			op.Resp <- addChannelsResponse{Channels: channels, Err: err}
+			op.Resp <- channelsResponse{Channels: channels, Err: err}
 		case op := <-s.addPostChan:
 			post, err := s.P.AddPost(op.User, op.Body, op.Channels)
 			op.Resp <- postResponse{Post: post, Err: err}
@@ -141,7 +146,7 @@ func (s *Site) DeletePost(c *Post) error {
 	return ur.Err
 }
 
-type addChannelsResponse struct {
+type channelsResponse struct {
 	Channels []*Channel
 	Err      error
 }
@@ -149,13 +154,26 @@ type addChannelsResponse struct {
 type addChannelsOp struct {
 	User  User
 	Names []string
-	Resp  chan addChannelsResponse
+	Resp  chan channelsResponse
 }
 
 func (s *Site) AddChannels(u User, names []string) ([]*Channel, error) {
-	r := make(chan addChannelsResponse)
+	r := make(chan channelsResponse)
 	op := &addChannelsOp{User: u, Names: names, Resp: r}
 	s.addChannelsChan <- op
+	ur := <-r
+	return ur.Channels, ur.Err
+}
+
+type getUserChannelsOp struct {
+	User User
+	Resp chan channelsResponse
+}
+
+func (s *Site) GetUserChannels(u User) ([]*Channel, error) {
+	r := make(chan channelsResponse)
+	op := &getUserChannelsOp{User: u, Resp: r}
+	s.getUserChannelsChan <- op
 	ur := <-r
 	return ur.Channels, ur.Err
 }
