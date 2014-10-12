@@ -42,8 +42,8 @@ func (c *Context) Populate(r *http.Request) {
 	sess, _ := c.Site.Store.Get(r, "finch")
 	username, found := sess.Values["user"]
 	if found && username != "" {
-		user, found := c.Site.P.GetUser(username.(string))
-		if found {
+		user, err := c.Site.P.GetUser(username.(string))
+		if err == nil {
 			c.User = user
 		}
 	}
@@ -138,8 +138,8 @@ func userDispatch(w http.ResponseWriter, r *http.Request, s *Site) {
 	}
 	ctx := Context{Site: s}
 	username := parts[2]
-	u, found := s.P.GetUser(username)
-	if !found {
+	u, err := s.P.GetUser(username)
+	if err != nil {
 		http.Error(w, "user doesn't exist", 404)
 		return
 	}
@@ -422,9 +422,9 @@ func loginHandler(w http.ResponseWriter, r *http.Request, s *Site) {
 	}
 	if r.Method == "POST" {
 		username, password := r.FormValue("username"), r.FormValue("password")
-		user, found := s.P.GetUser(username)
+		user, err := s.P.GetUser(username)
 
-		if !found {
+		if err != nil {
 			fmt.Fprintf(w, "user not found")
 			return
 		}

@@ -27,11 +27,11 @@ func (p *Persistence) Close() {
 	p.Database.Close()
 }
 
-func (p Persistence) GetUser(username string) (*User, bool) {
+func (p Persistence) GetUser(username string) (*User, error) {
 	stmt, err := p.Database.Prepare("select id, password from users where username = ?")
 	if err != nil {
 		log.Fatal(err)
-		return nil, false
+		return nil, err
 	}
 	defer stmt.Close()
 
@@ -40,9 +40,9 @@ func (p Persistence) GetUser(username string) (*User, bool) {
 
 	err = stmt.QueryRow(username).Scan(&id, &password)
 	if err != nil {
-		return nil, false
+		return nil, err
 	}
-	return &User{Id: id, Username: username, Password: []byte(password)}, true
+	return &User{Id: id, Username: username, Password: []byte(password)}, err
 }
 
 func (p Persistence) GetUserById(id int) (*User, error) {
