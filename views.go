@@ -10,6 +10,7 @@ import (
 	"text/template"
 
 	"github.com/gorilla/feeds"
+	"github.com/gorilla/sessions"
 )
 
 type SiteResponse struct {
@@ -36,6 +37,7 @@ func faviconHandler(w http.ResponseWriter, r *http.Request) {
 type Site struct {
 	P       *Persistence
 	BaseUrl string
+	Store   sessions.Store
 }
 
 type Context struct {
@@ -44,7 +46,7 @@ type Context struct {
 }
 
 func (c *Context) Populate(r *http.Request) {
-	sess, _ := store.Get(r, "finch")
+	sess, _ := c.Site.Store.Get(r, "finch")
 	username, found := sess.Values["user"]
 	if found && username != "" {
 		user, found := c.Site.P.GetUser(username.(string))
@@ -408,7 +410,7 @@ func registerHandler(w http.ResponseWriter, r *http.Request, s *Site) {
 			return
 		}
 
-		sess, _ := store.Get(r, "finch")
+		sess, _ := s.Store.Get(r, "finch")
 		sess.Values["user"] = user.Username
 		sess.Save(r, w)
 	}
@@ -439,7 +441,7 @@ func loginHandler(w http.ResponseWriter, r *http.Request, s *Site) {
 		}
 
 		// store userid in session
-		sess, _ := store.Get(r, "finch")
+		sess, _ := s.Store.Get(r, "finch")
 		sess.Values["user"] = user.Username
 		sess.Save(r, w)
 	}
@@ -447,7 +449,7 @@ func loginHandler(w http.ResponseWriter, r *http.Request, s *Site) {
 }
 
 func logoutHandler(w http.ResponseWriter, r *http.Request, s *Site) {
-	sess, _ := store.Get(r, "finch")
+	sess, _ := s.Store.Get(r, "finch")
 	delete(sess.Values, "user")
 	sess.Save(r, w)
 	http.Redirect(w, r, "/", http.StatusFound)
