@@ -11,6 +11,7 @@ type Site struct {
 
 	createUserChan    chan *createUserOp
 	deleteChannelChan chan *deleteChannelOp
+	deletePostChan    chan *deletePostOp
 }
 
 func NewSite(p *Persistence, base string, store sessions.Store) *Site {
@@ -20,6 +21,7 @@ func NewSite(p *Persistence, base string, store sessions.Store) *Site {
 		Store:             store,
 		createUserChan:    make(chan *createUserOp),
 		deleteChannelChan: make(chan *deleteChannelOp),
+		deletePostChan:    make(chan *deletePostOp),
 	}
 	go s.Run()
 	return &s
@@ -34,6 +36,9 @@ func (s *Site) Run() {
 		case op := <-s.deleteChannelChan:
 			err := s.P.DeleteChannel(op.Channel)
 			op.Resp <- deleteChannelResponse{Err: err}
+		case op := <-s.deletePostChan:
+			err := s.P.DeletePost(op.Post)
+			op.Resp <- deletePostResponse{Err: err}
 		}
 	}
 }
@@ -70,6 +75,23 @@ func (s *Site) DeleteChannel(c *Channel) error {
 	r := make(chan deleteChannelResponse)
 	op := &deleteChannelOp{Channel: c, Resp: r}
 	s.deleteChannelChan <- op
+	ur := <-r
+	return ur.Err
+}
+
+type deletePostResponse struct {
+	Err error
+}
+
+type deletePostOp struct {
+	Post *Post
+	Resp chan deletePostResponse
+}
+
+func (s *Site) DeletePost(c *Post) error {
+	r := make(chan deletePostResponse)
+	op := &deletePostOp{Post: c, Resp: r}
+	s.deletePostChan <- op
 	ur := <-r
 	return ur.Err
 }

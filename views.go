@@ -311,7 +311,7 @@ func postDelete(w http.ResponseWriter, r *http.Request, ctx Context, u *User, p 
 		http.Error(w, "you can only delete your own posts", 403)
 		return
 	}
-	ctx.Site.P.DeletePost(p)
+	ctx.Site.DeletePost(p)
 	http.Redirect(w, r, "/", http.StatusFound)
 }
 
