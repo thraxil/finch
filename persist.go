@@ -87,32 +87,6 @@ func (p *Persistence) CreateUser(username, password string) (*User, error) {
 	return u, nil
 }
 
-func (p Persistence) GetAllUsers() []*User {
-	q := `select id, username from users order by username ASC`
-	stmt, err := p.Database.Prepare(q)
-	if err != nil {
-		log.Fatal(err)
-		return nil
-	}
-	defer stmt.Close()
-
-	users := make([]*User, 0)
-
-	rows, err := stmt.Query()
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer rows.Close()
-	for rows.Next() {
-		var id int
-		var username string
-		rows.Scan(&id, &username)
-		u := &User{Id: id, Username: username}
-		users = append(users, u)
-	}
-	return users
-}
-
 type Channel struct {
 	Id    int
 	User  *User
