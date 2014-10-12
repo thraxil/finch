@@ -20,6 +20,7 @@ type Site struct {
 	getUserChan         chan *getUserOp
 	getPostByUUIDChan   chan *getPostByUUIDOp
 	getUserChannelsChan chan *getUserChannelsOp
+	getAllPostsChan     chan *getAllPostsOp
 }
 
 func NewSite(p *Persistence, base string, store sessions.Store) *Site {
@@ -36,6 +37,7 @@ func NewSite(p *Persistence, base string, store sessions.Store) *Site {
 		getUserChan:         make(chan *getUserOp),
 		getPostByUUIDChan:   make(chan *getPostByUUIDOp),
 		getUserChannelsChan: make(chan *getUserChannelsOp),
+		getAllPostsChan:     make(chan *getAllPostsOp),
 	}
 	go s.Run()
 	return &s
@@ -58,6 +60,9 @@ func (s *Site) Run() {
 		case op := <-s.getUserChannelsChan:
 			channels, err := s.P.GetUserChannels(op.User)
 			op.Resp <- channelsResponse{Channels: channels, Err: err}
+		case op := <-s.getAllPostsChan:
+			posts, err := s.P.GetAllPosts(op.Limit, op.Offset)
+			op.Resp <- postsResponse{Posts: posts, Err: err}
 
 		// then writes
 		case op := <-s.createUserChan:
@@ -209,4 +214,23 @@ func (s *Site) GetPostByUUID(uu string) (*Post, error) {
 	s.getPostByUUIDChan <- op
 	ur := <-r
 	return ur.Post, ur.Err
+}
+
+type postsResponse struct {
+	Posts []*Post
+	Err   error
+}
+
+type getAllPostsOp struct {
+	Limit  int
+	Offset int
+	Resp   chan postsResponse
+}
+
+func (s *Site) GetAllPosts(limit, offset int) ([]*Post, error) {
+	r := make(chan postsResponse)
+	op := &getAllPostsOp{Limit: limit, Offset: offset, Resp: r}
+	s.getAllPostsChan <- op
+	ur := <-r
+	return ur.Posts, ur.Err
 }

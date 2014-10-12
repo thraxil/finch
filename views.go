@@ -74,7 +74,7 @@ func indexHandler(w http.ResponseWriter, r *http.Request, s *Site) {
 		}
 		ir.Channels = c
 	}
-	posts, err := s.P.GetAllPosts(50, 0)
+	posts, err := s.GetAllPosts(50, 0)
 	ir.Posts = posts
 	if err != nil {
 		log.Println(err)
