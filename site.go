@@ -9,11 +9,15 @@ type Site struct {
 	BaseUrl string
 	Store   sessions.Store
 
+	// write operation channels
 	createUserChan    chan *createUserOp
 	deleteChannelChan chan *deleteChannelOp
 	deletePostChan    chan *deletePostOp
 	addChannelsChan   chan *addChannelsOp
 	addPostChan       chan *addPostOp
+
+	// read operation channels
+	getUserChan chan *getUserOp
 }
 
 func NewSite(p *Persistence, base string, store sessions.Store) *Site {
@@ -26,6 +30,8 @@ func NewSite(p *Persistence, base string, store sessions.Store) *Site {
 		deletePostChan:    make(chan *deletePostOp),
 		addChannelsChan:   make(chan *addChannelsOp),
 		addPostChan:       make(chan *addPostOp),
+
+		getUserChan: make(chan *getUserOp),
 	}
 	go s.Run()
 	return &s
@@ -38,6 +44,12 @@ that there is never more than one happening at a time.
 func (s *Site) Run() {
 	for {
 		select {
+		// reads first
+		case op := <-s.getUserChan:
+			u, err := s.P.GetUser(op.Username)
+			op.Resp <- userResponse{User: u, Err: err}
+
+		// then writes
 		case op := <-s.createUserChan:
 			u, err := s.P.CreateUser(op.Username, op.Password)
 			op.Resp <- userResponse{User: u, Err: err}
@@ -73,6 +85,19 @@ func (s *Site) CreateUser(username, password string) (*User, error) {
 	r := make(chan userResponse)
 	cuo := &createUserOp{Username: username, Password: password, Resp: r}
 	s.createUserChan <- cuo
+	ur := <-r
+	return ur.User, ur.Err
+}
+
+type getUserOp struct {
+	Username string
+	Resp     chan userResponse
+}
+
+func (s *Site) GetUser(username string) (*User, error) {
+	r := make(chan userResponse)
+	op := &getUserOp{Username: username, Resp: r}
+	s.getUserChan <- op
 	ur := <-r
 	return ur.User, ur.Err
 }
