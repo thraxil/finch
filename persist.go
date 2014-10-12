@@ -296,7 +296,7 @@ func (p Persistence) GetChannelById(id int) (*Channel, error) {
 	return &Channel{Id: id, User: u, Slug: slug, Label: label}, nil
 }
 
-func (p Persistence) GetPost(id int) (*Post, error) {
+func (p Persistence) getPost(id int) (*Post, error) {
 	q := `select user_id, uuid, body, posted from post where id = ?`
 	stmt, err := p.Database.Prepare(q)
 	if err != nil {
@@ -558,7 +558,7 @@ func (p *Persistence) AddPost(u User, body string, channels []*Channel) (*Post, 
 
 	tx.Commit()
 
-	post, err := p.GetPost(int(id))
+	post, err := p.getPost(int(id))
 	if err != nil {
 		log.Println("error getting post", err)
 		return nil, err
