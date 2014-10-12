@@ -34,7 +34,8 @@ func faviconHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 type Site struct {
-	P *Persistence
+	P       *Persistence
+	BaseUrl string
 }
 
 type Context struct {
@@ -245,7 +246,7 @@ func userIndex(w http.ResponseWriter, r *http.Request, ctx Context, u *User) {
 }
 
 func userFeed(w http.ResponseWriter, r *http.Request, ctx Context, u *User) {
-	base := BASE_URL
+	base := ctx.Site.BaseUrl
 
 	all_posts, err := ctx.Site.P.GetAllUserPosts(u, 50, 0)
 	if err != nil {
@@ -320,7 +321,7 @@ func postDelete(w http.ResponseWriter, r *http.Request, ctx Context, u *User, p 
 }
 
 func channelFeed(w http.ResponseWriter, r *http.Request, ctx Context, u *User, c *Channel) {
-	base := BASE_URL
+	base := ctx.Site.BaseUrl
 
 	all_posts, err := ctx.Site.P.GetAllPostsInChannel(*c, 50, 0)
 	if err != nil {
