@@ -45,7 +45,7 @@ func (p Persistence) GetUser(username string) (*User, error) {
 	return &User{Id: id, Username: username, Password: []byte(password)}, err
 }
 
-func (p Persistence) GetUserById(id int) (*User, error) {
+func (p Persistence) getUserById(id int) (*User, error) {
 	q := `select username, password from users where id = ?`
 	stmt, err := p.Database.Prepare(q)
 	if err != nil {
@@ -288,7 +288,7 @@ func (p Persistence) GetChannelById(id int) (*Channel, error) {
 		return nil, err
 	}
 
-	u, err := p.GetUserById(user_id)
+	u, err := p.getUserById(user_id)
 	if err != nil {
 		return nil, err
 	}
@@ -316,7 +316,7 @@ func (p Persistence) GetPost(id int) (*Post, error) {
 		return nil, err
 	}
 
-	u, err := p.GetUserById(user_id)
+	u, err := p.getUserById(user_id)
 	if err != nil {
 		log.Println("error getting post user", err)
 		return nil, err
@@ -345,7 +345,7 @@ func (p Persistence) GetPostByUUID(uu string) (*Post, error) {
 		return nil, err
 	}
 
-	u, err := p.GetUserById(user_id)
+	u, err := p.getUserById(user_id)
 	if err != nil {
 		log.Println("error getting post user", err)
 		return nil, err
@@ -378,7 +378,7 @@ func (p Persistence) GetAllPosts(limit int, offset int) ([]*Post, error) {
 		var posted int
 		var uu string
 		rows.Scan(&id, &uu, &user_id, &body, &posted)
-		u, err := p.GetUserById(user_id)
+		u, err := p.getUserById(user_id)
 		if err != nil {
 			continue
 		}
@@ -453,7 +453,7 @@ func (p Persistence) GetAllPostsInChannel(c Channel, limit int, offset int) ([]*
 		var posted int
 		var uu string
 		rows.Scan(&id, &uu, &user_id, &body, &posted)
-		u, err := p.GetUserById(user_id)
+		u, err := p.getUserById(user_id)
 		if err != nil {
 			continue
 		}
