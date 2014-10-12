@@ -17,7 +17,8 @@ type Site struct {
 	addPostChan       chan *addPostOp
 
 	// read operation channels
-	getUserChan chan *getUserOp
+	getUserChan       chan *getUserOp
+	getPostByUUIDChan chan *getPostByUUIDOp
 }
 
 func NewSite(p *Persistence, base string, store sessions.Store) *Site {
@@ -31,7 +32,8 @@ func NewSite(p *Persistence, base string, store sessions.Store) *Site {
 		addChannelsChan:   make(chan *addChannelsOp),
 		addPostChan:       make(chan *addPostOp),
 
-		getUserChan: make(chan *getUserOp),
+		getUserChan:       make(chan *getUserOp),
+		getPostByUUIDChan: make(chan *getPostByUUIDOp),
 	}
 	go s.Run()
 	return &s
@@ -48,6 +50,9 @@ func (s *Site) Run() {
 		case op := <-s.getUserChan:
 			u, err := s.P.GetUser(op.Username)
 			op.Resp <- userResponse{User: u, Err: err}
+		case op := <-s.getPostByUUIDChan:
+			p, err := s.P.GetPostByUUID(op.UUID)
+			op.Resp <- postResponse{Post: p, Err: err}
 
 		// then writes
 		case op := <-s.createUserChan:
@@ -64,7 +69,7 @@ func (s *Site) Run() {
 			op.Resp <- addChannelsResponse{Channels: channels, Err: err}
 		case op := <-s.addPostChan:
 			post, err := s.P.AddPost(op.User, op.Body, op.Channels)
-			op.Resp <- addPostResponse{Post: post, Err: err}
+			op.Resp <- postResponse{Post: post, Err: err}
 
 		}
 	}
@@ -155,7 +160,7 @@ func (s *Site) AddChannels(u User, names []string) ([]*Channel, error) {
 	return ur.Channels, ur.Err
 }
 
-type addPostResponse struct {
+type postResponse struct {
 	Post *Post
 	Err  error
 }
@@ -164,13 +169,26 @@ type addPostOp struct {
 	User     User
 	Body     string
 	Channels []*Channel
-	Resp     chan addPostResponse
+	Resp     chan postResponse
 }
 
 func (s *Site) AddPost(u User, body string, channels []*Channel) (*Post, error) {
-	r := make(chan addPostResponse)
+	r := make(chan postResponse)
 	op := &addPostOp{User: u, Body: body, Channels: channels, Resp: r}
 	s.addPostChan <- op
+	ur := <-r
+	return ur.Post, ur.Err
+}
+
+type getPostByUUIDOp struct {
+	UUID string
+	Resp chan postResponse
+}
+
+func (s *Site) GetPostByUUID(uu string) (*Post, error) {
+	r := make(chan postResponse)
+	op := &getPostByUUIDOp{UUID: uu, Resp: r}
+	s.getPostByUUIDChan <- op
 	ur := <-r
 	return ur.Post, ur.Err
 }

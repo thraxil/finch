@@ -180,7 +180,7 @@ func userDispatch(w http.ResponseWriter, r *http.Request, s *Site) {
 			return
 		}
 		puuid := parts[4]
-		p, err := s.P.GetPostByUUID(puuid)
+		p, err := s.GetPostByUUID(puuid)
 		if err != nil {
 			http.Error(w, "post not found", 404)
 			return
