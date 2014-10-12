@@ -395,7 +395,7 @@ func registerHandler(w http.ResponseWriter, r *http.Request, s *Site) {
 			fmt.Fprintf(w, "passwords don't match")
 			return
 		}
-		user, err := s.P.CreateUser(username, password)
+		user, err := s.CreateUser(username, password)
 
 		if err != nil {
 			fmt.Println(err)

@@ -20,11 +20,10 @@ func main() {
 	p := NewPersistence(os.Getenv("FINCH_DB_FILE"))
 	defer p.Close()
 
-	s := &Site{
-		P:       p,
-		BaseUrl: os.Getenv("FINCH_BASE_URL"),
-		Store:   sessions.NewCookieStore([]byte(os.Getenv("FINCH_SECRET"))),
-	}
+	s := NewSite(
+		p,
+		os.Getenv("FINCH_BASE_URL"),
+		sessions.NewCookieStore([]byte(os.Getenv("FINCH_SECRET"))))
 
 	http.HandleFunc("/", makeHandler(indexHandler, s))
 	http.HandleFunc("/post/", makeHandler(postHandler, s))
