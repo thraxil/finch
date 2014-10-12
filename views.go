@@ -33,8 +33,12 @@ func faviconHandler(w http.ResponseWriter, r *http.Request) {
 	// just ignore this crap
 }
 
+type Site struct {
+	P *Persistence
+}
+
 type Context struct {
-	P    *Persistence
+	Site *Site
 	User *User
 }
 
@@ -42,7 +46,7 @@ func (c *Context) Populate(r *http.Request) {
 	sess, _ := store.Get(r, "finch")
 	username, found := sess.Values["user"]
 	if found && username != "" {
-		user, found := c.P.GetUser(username.(string))
+		user, found := c.Site.P.GetUser(username.(string))
 		if found {
 			c.User = user
 		}
@@ -61,14 +65,15 @@ type IndexResponse struct {
 	SiteResponse
 }
 
-func indexHandler(w http.ResponseWriter, r *http.Request, ctx Context) {
+func indexHandler(w http.ResponseWriter, r *http.Request, s *Site) {
+	ctx := Context{Site: s}
 	ctx.Populate(r)
 	ir := IndexResponse{}
 	ctx.PopulateResponse(&ir)
 	if ctx.User != nil {
-		ir.Channels = ctx.P.UserChannels(*ctx.User)
+		ir.Channels = s.P.UserChannels(*ctx.User)
 	}
-	posts, err := ctx.P.GetAllPosts(50, 0)
+	posts, err := s.P.GetAllPosts(50, 0)
 	ir.Posts = posts
 	if err != nil {
 		log.Println(err)
@@ -79,11 +84,12 @@ func indexHandler(w http.ResponseWriter, r *http.Request, ctx Context) {
 	tmpl.Execute(w, ir)
 }
 
-func postHandler(w http.ResponseWriter, r *http.Request, ctx Context) {
+func postHandler(w http.ResponseWriter, r *http.Request, s *Site) {
 	if r.Method != "POST" {
 		fmt.Fprintf(w, "POST only")
 		return
 	}
+	ctx := Context{Site: s}
 	ctx.Populate(r)
 	if ctx.User == nil {
 		http.Redirect(w, r, "/login/", http.StatusFound)
@@ -92,7 +98,7 @@ func postHandler(w http.ResponseWriter, r *http.Request, ctx Context) {
 	body := r.FormValue("body")
 	nchan := make([]string, 3)
 	nchan[0], nchan[1], nchan[2] = r.FormValue("new_channel0"), r.FormValue("new_channel1"), r.FormValue("new_channel2")
-	channels, err := ctx.P.AddChannels(*ctx.User, nchan)
+	channels, err := s.P.AddChannels(*ctx.User, nchan)
 	if err != nil {
 		log.Fatal(err)
 		fmt.Fprintf(w, "error making channels")
@@ -107,7 +113,7 @@ func postHandler(w http.ResponseWriter, r *http.Request, ctx Context) {
 				// couldn't parse it for some reason
 				continue
 			}
-			c, err := ctx.P.GetChannelById(id)
+			c, err := s.P.GetChannelById(id)
 			if err != nil {
 				continue
 			}
@@ -115,7 +121,7 @@ func postHandler(w http.ResponseWriter, r *http.Request, ctx Context) {
 		}
 	}
 
-	_, err = ctx.P.AddPost(*ctx.User, body, channels)
+	_, err = s.P.AddPost(*ctx.User, body, channels)
 	if err != nil {
 		log.Fatal(err)
 		fmt.Fprintf(w, "could not add post")
@@ -124,7 +130,7 @@ func postHandler(w http.ResponseWriter, r *http.Request, ctx Context) {
 	http.Redirect(w, r, "/", http.StatusFound)
 }
 
-func userDispatch(w http.ResponseWriter, r *http.Request, ctx Context) {
+func userDispatch(w http.ResponseWriter, r *http.Request, s *Site) {
 	parts := strings.Split(r.URL.String(), "/")
 	if len(parts) < 4 {
 		http.Error(w, "bad request", 400)
@@ -134,8 +140,9 @@ func userDispatch(w http.ResponseWriter, r *http.Request, ctx Context) {
 		http.Error(w, "bad request", 400)
 		return
 	}
+	ctx := Context{Site: s}
 	username := parts[2]
-	u, found := ctx.P.GetUser(username)
+	u, found := s.P.GetUser(username)
 	if !found {
 		http.Error(w, "user doesn't exist", 404)
 		return
@@ -152,7 +159,7 @@ func userDispatch(w http.ResponseWriter, r *http.Request, ctx Context) {
 
 	if parts[3] == "c" {
 		slug := parts[4]
-		channel, err := ctx.P.GetChannel(*u, slug)
+		channel, err := s.P.GetChannel(*u, slug)
 		if err != nil {
 			http.Error(w, "channel not found", 404)
 		}
@@ -177,7 +184,7 @@ func userDispatch(w http.ResponseWriter, r *http.Request, ctx Context) {
 			return
 		}
 		puuid := parts[4]
-		p, err := ctx.P.GetPostByUUID(puuid)
+		p, err := s.P.GetPostByUUID(puuid)
 		if err != nil {
 			http.Error(w, "post not found", 404)
 			return
@@ -206,7 +213,7 @@ func postPage(w http.ResponseWriter, r *http.Request, ctx Context, u *User, p *P
 	pr := PostResponse{}
 	ctx.PopulateResponse(&pr)
 	pr.Post = p
-	channels, err := ctx.P.GetPostChannels(p)
+	channels, err := ctx.Site.P.GetPostChannels(p)
 	if err != nil {
 		http.Error(w, "error retrieving channels", 500)
 	}
@@ -227,7 +234,7 @@ func userIndex(w http.ResponseWriter, r *http.Request, ctx Context, u *User) {
 	ir := UserIndexResponse{User: u}
 	ctx.PopulateResponse(&ir)
 
-	all_posts, err := ctx.P.GetAllUserPosts(u, 50, 0)
+	all_posts, err := ctx.Site.P.GetAllUserPosts(u, 50, 0)
 	if err != nil {
 		http.Error(w, "couldn't retrieve posts", 500)
 		return
@@ -240,7 +247,7 @@ func userIndex(w http.ResponseWriter, r *http.Request, ctx Context, u *User) {
 func userFeed(w http.ResponseWriter, r *http.Request, ctx Context, u *User) {
 	base := BASE_URL
 
-	all_posts, err := ctx.P.GetAllUserPosts(u, 50, 0)
+	all_posts, err := ctx.Site.P.GetAllUserPosts(u, 50, 0)
 	if err != nil {
 		http.Error(w, "couldn't retrieve posts", 500)
 		return
@@ -290,7 +297,7 @@ func channelDelete(w http.ResponseWriter, r *http.Request, ctx Context, u *User,
 		http.Error(w, "you can only delete your own channels", 403)
 		return
 	}
-	ctx.P.DeleteChannel(c)
+	ctx.Site.P.DeleteChannel(c)
 	http.Redirect(w, r, "/", http.StatusFound)
 }
 
@@ -308,14 +315,14 @@ func postDelete(w http.ResponseWriter, r *http.Request, ctx Context, u *User, p 
 		http.Error(w, "you can only delete your own posts", 403)
 		return
 	}
-	ctx.P.DeletePost(p)
+	ctx.Site.P.DeletePost(p)
 	http.Redirect(w, r, "/", http.StatusFound)
 }
 
 func channelFeed(w http.ResponseWriter, r *http.Request, ctx Context, u *User, c *Channel) {
 	base := BASE_URL
 
-	all_posts, err := ctx.P.GetAllPostsInChannel(*c, 50, 0)
+	all_posts, err := ctx.Site.P.GetAllPostsInChannel(*c, 50, 0)
 	if err != nil {
 		http.Error(w, "couldn't retrieve posts", 500)
 		return
@@ -362,7 +369,7 @@ func channelIndex(w http.ResponseWriter, r *http.Request, ctx Context, u *User, 
 	ir := ChannelIndexResponse{Channel: c}
 	ctx.PopulateResponse(&ir)
 
-	all_posts, err := ctx.P.GetAllPostsInChannel(*c, 50, 0)
+	all_posts, err := ctx.Site.P.GetAllPostsInChannel(*c, 50, 0)
 	if err != nil {
 		http.Error(w, "couldn't retrieve posts", 500)
 		return
@@ -372,7 +379,8 @@ func channelIndex(w http.ResponseWriter, r *http.Request, ctx Context, u *User, 
 	tmpl.Execute(w, ir)
 }
 
-func registerForm(w http.ResponseWriter, r *http.Request, ctx Context) {
+func registerForm(w http.ResponseWriter, r *http.Request, s *Site) {
+	ctx := Context{Site: s}
 	ctx.Populate(r)
 	ir := SiteResponse{}
 	ctx.PopulateResponse(&ir)
@@ -380,9 +388,9 @@ func registerForm(w http.ResponseWriter, r *http.Request, ctx Context) {
 	tmpl.Execute(w, ir)
 }
 
-func registerHandler(w http.ResponseWriter, r *http.Request, ctx Context) {
+func registerHandler(w http.ResponseWriter, r *http.Request, s *Site) {
 	if r.Method == "GET" {
-		registerForm(w, r, ctx)
+		registerForm(w, r, s)
 		return
 	}
 	if r.Method == "POST" {
@@ -391,7 +399,7 @@ func registerHandler(w http.ResponseWriter, r *http.Request, ctx Context) {
 			fmt.Fprintf(w, "passwords don't match")
 			return
 		}
-		user, err := ctx.P.CreateUser(username, password)
+		user, err := s.P.CreateUser(username, password)
 
 		if err != nil {
 			fmt.Println(err)
@@ -411,14 +419,14 @@ func loginForm(w http.ResponseWriter, req *http.Request) {
 	tmpl.Execute(w, nil)
 }
 
-func loginHandler(w http.ResponseWriter, r *http.Request, ctx Context) {
+func loginHandler(w http.ResponseWriter, r *http.Request, s *Site) {
 	if r.Method == "GET" {
 		loginForm(w, r)
 		return
 	}
 	if r.Method == "POST" {
 		username, password := r.FormValue("username"), r.FormValue("password")
-		user, found := ctx.P.GetUser(username)
+		user, found := s.P.GetUser(username)
 
 		if !found {
 			fmt.Fprintf(w, "user not found")
@@ -437,7 +445,7 @@ func loginHandler(w http.ResponseWriter, r *http.Request, ctx Context) {
 	http.Redirect(w, r, "/", http.StatusFound)
 }
 
-func logoutHandler(w http.ResponseWriter, r *http.Request, ctx Context) {
+func logoutHandler(w http.ResponseWriter, r *http.Request, s *Site) {
 	sess, _ := store.Get(r, "finch")
 	delete(sess.Values, "user")
 	sess.Save(r, w)

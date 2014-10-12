@@ -13,9 +13,9 @@ var BASE_URL string
 var store sessions.Store
 var template_dir = "templates"
 
-func makeHandler(fn func(http.ResponseWriter, *http.Request, Context), ctx Context) http.HandlerFunc {
+func makeHandler(fn func(http.ResponseWriter, *http.Request, *Site), s *Site) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		fn(w, r, ctx)
+		fn(w, r, s)
 	}
 }
 
@@ -26,17 +26,17 @@ func main() {
 	BASE_URL = os.Getenv("FINCH_BASE_URL")
 	store = sessions.NewCookieStore([]byte(os.Getenv("FINCH_SECRET")))
 
-	ctx := Context{P: p}
+	s := &Site{P: p}
 
-	http.HandleFunc("/", makeHandler(indexHandler, ctx))
-	http.HandleFunc("/post/", makeHandler(postHandler, ctx))
+	http.HandleFunc("/", makeHandler(indexHandler, s))
+	http.HandleFunc("/post/", makeHandler(postHandler, s))
 
-	http.HandleFunc("/u/", makeHandler(userDispatch, ctx))
+	http.HandleFunc("/u/", makeHandler(userDispatch, s))
 
 	// authy stuff
-	http.HandleFunc("/register/", makeHandler(registerHandler, ctx))
-	http.HandleFunc("/login/", makeHandler(loginHandler, ctx))
-	http.HandleFunc("/logout/", makeHandler(logoutHandler, ctx))
+	http.HandleFunc("/register/", makeHandler(registerHandler, s))
+	http.HandleFunc("/login/", makeHandler(loginHandler, s))
+	http.HandleFunc("/logout/", makeHandler(logoutHandler, s))
 
 	// static misc.
 	http.HandleFunc("/favicon.ico", faviconHandler)
