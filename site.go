@@ -17,10 +17,11 @@ type Site struct {
 	addPostChan       chan *addPostOp
 
 	// read operation channels
-	getUserChan         chan *getUserOp
-	getPostByUUIDChan   chan *getPostByUUIDOp
-	getUserChannelsChan chan *getUserChannelsOp
-	getAllPostsChan     chan *getAllPostsOp
+	getUserChan              chan *getUserOp
+	getPostByUUIDChan        chan *getPostByUUIDOp
+	getUserChannelsChan      chan *getUserChannelsOp
+	getAllPostsChan          chan *getAllPostsOp
+	getAllPostsInChannelChan chan *getAllPostsInChannelOp
 }
 
 func NewSite(p *Persistence, base string, store sessions.Store) *Site {
@@ -34,10 +35,11 @@ func NewSite(p *Persistence, base string, store sessions.Store) *Site {
 		addChannelsChan:   make(chan *addChannelsOp),
 		addPostChan:       make(chan *addPostOp),
 
-		getUserChan:         make(chan *getUserOp),
-		getPostByUUIDChan:   make(chan *getPostByUUIDOp),
-		getUserChannelsChan: make(chan *getUserChannelsOp),
-		getAllPostsChan:     make(chan *getAllPostsOp),
+		getUserChan:              make(chan *getUserOp),
+		getPostByUUIDChan:        make(chan *getPostByUUIDOp),
+		getUserChannelsChan:      make(chan *getUserChannelsOp),
+		getAllPostsChan:          make(chan *getAllPostsOp),
+		getAllPostsInChannelChan: make(chan *getAllPostsInChannelOp),
 	}
 	go s.Run()
 	return &s
@@ -62,6 +64,9 @@ func (s *Site) Run() {
 			op.Resp <- channelsResponse{Channels: channels, Err: err}
 		case op := <-s.getAllPostsChan:
 			posts, err := s.P.GetAllPosts(op.Limit, op.Offset)
+			op.Resp <- postsResponse{Posts: posts, Err: err}
+		case op := <-s.getAllPostsInChannelChan:
+			posts, err := s.P.GetAllPostsInChannel(op.Channel, op.Limit, op.Offset)
 			op.Resp <- postsResponse{Posts: posts, Err: err}
 
 		// then writes
@@ -231,6 +236,21 @@ func (s *Site) GetAllPosts(limit, offset int) ([]*Post, error) {
 	r := make(chan postsResponse)
 	op := &getAllPostsOp{Limit: limit, Offset: offset, Resp: r}
 	s.getAllPostsChan <- op
+	ur := <-r
+	return ur.Posts, ur.Err
+}
+
+type getAllPostsInChannelOp struct {
+	Channel Channel
+	Limit   int
+	Offset  int
+	Resp    chan postsResponse
+}
+
+func (s *Site) GetAllPostsInChannel(c Channel, limit, offset int) ([]*Post, error) {
+	r := make(chan postsResponse)
+	op := &getAllPostsInChannelOp{Channel: c, Limit: limit, Offset: offset, Resp: r}
+	s.getAllPostsInChannelChan <- op
 	ur := <-r
 	return ur.Posts, ur.Err
 }

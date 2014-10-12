@@ -323,7 +323,7 @@ func postDelete(w http.ResponseWriter, r *http.Request, ctx Context, u *User, p 
 func channelFeed(w http.ResponseWriter, r *http.Request, ctx Context, u *User, c *Channel) {
 	base := ctx.Site.BaseUrl
 
-	all_posts, err := ctx.Site.P.GetAllPostsInChannel(*c, 50, 0)
+	all_posts, err := ctx.Site.GetAllPostsInChannel(*c, 50, 0)
 	if err != nil {
 		http.Error(w, "couldn't retrieve posts", 500)
 		return
@@ -370,7 +370,7 @@ func channelIndex(w http.ResponseWriter, r *http.Request, ctx Context, u *User, 
 	ir := ChannelIndexResponse{Channel: c}
 	ctx.PopulateResponse(&ir)
 
-	all_posts, err := ctx.Site.P.GetAllPostsInChannel(*c, 50, 0)
+	all_posts, err := ctx.Site.GetAllPostsInChannel(*c, 50, 0)
 	if err != nil {
 		http.Error(w, "couldn't retrieve posts", 500)
 		return
