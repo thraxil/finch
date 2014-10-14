@@ -10,6 +10,7 @@ import (
 	"text/template"
 
 	"github.com/gorilla/feeds"
+	"github.com/russross/blackfriday"
 )
 
 type SiteResponse struct {
@@ -318,7 +319,7 @@ func userFeed(w http.ResponseWriter, r *http.Request, ctx Context, u *User) {
 			&feeds.Item{
 				Title:       u.Username + ": " + p.Time().UTC().Format(layout),
 				Link:        &feeds.Link{Href: base + p.URL()},
-				Description: p.Body,
+				Description: string(blackfriday.MarkdownBasic([]byte(p.Body))),
 				Author:      &feeds.Author{u.Username, u.Username},
 				Created:     p.Time(),
 			})
@@ -393,7 +394,7 @@ func channelFeed(w http.ResponseWriter, r *http.Request, ctx Context, u *User, c
 			&feeds.Item{
 				Title:       u.Username + ": " + p.Time().UTC().Format(layout),
 				Link:        &feeds.Link{Href: base + p.URL()},
-				Description: p.Body,
+				Description: string(blackfriday.MarkdownBasic([]byte(p.Body))),
 				Author:      &feeds.Author{u.Username, u.Username},
 				Created:     p.Time(),
 			})
