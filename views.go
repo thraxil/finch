@@ -308,7 +308,7 @@ func userFeed(w http.ResponseWriter, r *http.Request, ctx Context, u *User) {
 		Title:       "Finch Feed for " + u.Username,
 		Link:        &feeds.Link{Href: base + "/u/" + u.Username + "/feed/"},
 		Description: "Finch feed",
-		Author:      &feeds.Author{u.Username, u.Username},
+		Author:      &feeds.Author{Name: u.Username, Email: u.Username},
 		Created:     latest.Time(),
 	}
 	feed.Items = []*feeds.Item{}
@@ -320,7 +320,7 @@ func userFeed(w http.ResponseWriter, r *http.Request, ctx Context, u *User) {
 				Title:       u.Username + ": " + p.Time().UTC().Format(layout),
 				Link:        &feeds.Link{Href: base + p.URL()},
 				Description: string(blackfriday.MarkdownBasic([]byte(p.Body))),
-				Author:      &feeds.Author{u.Username, u.Username},
+				Author:      &feeds.Author{Name: u.Username, Email: u.Username},
 				Created:     p.Time(),
 			})
 	}
@@ -383,7 +383,7 @@ func channelFeed(w http.ResponseWriter, r *http.Request, ctx Context, u *User, c
 		Title:       "Finch Feed for " + u.Username + " / " + c.Label,
 		Link:        &feeds.Link{Href: base + "/u/" + u.Username + "/c/" + c.Slug + "/feed/"},
 		Description: "Finch Channel feed",
-		Author:      &feeds.Author{u.Username, u.Username},
+		Author:      &feeds.Author{Name: u.Username, Email: u.Username},
 		Created:     latest.Time(),
 	}
 	feed.Items = []*feeds.Item{}
@@ -395,7 +395,7 @@ func channelFeed(w http.ResponseWriter, r *http.Request, ctx Context, u *User, c
 				Title:       u.Username + ": " + p.Time().UTC().Format(layout),
 				Link:        &feeds.Link{Href: base + p.URL()},
 				Description: string(blackfriday.MarkdownBasic([]byte(p.Body))),
-				Author:      &feeds.Author{u.Username, u.Username},
+				Author:      &feeds.Author{Name: u.Username, Email: u.Username},
 				Created:     p.Time(),
 			})
 	}
