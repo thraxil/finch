@@ -7,23 +7,23 @@ import (
 	"github.com/russross/blackfriday"
 )
 
-type Post struct {
-	Id       int
+type post struct {
+	ID       int
 	UUID     string
-	User     *User
+	User     *user
 	Body     string
 	Posted   int
-	Channels []*Channel
+	Channels []*channel
 }
 
-func (p Post) RenderBody() template.HTML {
+func (p post) RenderBody() template.HTML {
 	return template.HTML(string(blackfriday.MarkdownCommon([]byte(p.Body))))
 }
 
-func (p Post) URL() string {
+func (p post) URL() string {
 	return "/u/" + p.User.Username + "/p/" + p.UUID + "/"
 }
 
-func (p Post) Time() time.Time {
+func (p post) Time() time.Time {
 	return time.Unix(int64(p.Posted), 0)
 }

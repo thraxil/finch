@@ -6,9 +6,9 @@ import (
 	"github.com/gorilla/sessions"
 )
 
-type Site struct {
-	p            *Persistence
-	BaseUrl      string
+type site struct {
+	p            *persistence
+	BaseURL      string
 	Store        sessions.Store
 	ItemsPerPage int
 
@@ -27,19 +27,19 @@ type Site struct {
 	getAllPostsInChannelChan chan *getAllPostsInChannelOp
 	getAllUserPostsChan      chan *getAllUserPostsOp
 	getChannelChan           chan *getChannelOp
-	getChannelByIdChan       chan *getChannelByIdOp
+	getChannelByIDChan       chan *getChannelByIDOp
 	getPostChannelsChan      chan *getPostChannelsOp
 	searchPostsChan          chan *searchPostsOp
 }
 
-func NewSite(p *Persistence, base string, store sessions.Store, ipp string) *Site {
+func newSite(p *persistence, base string, store sessions.Store, ipp string) *site {
 	i, err := strconv.Atoi(ipp)
 	if err != nil {
 		i = 50
 	}
-	s := Site{
+	s := site{
 		p:                 p,
-		BaseUrl:           base,
+		BaseURL:           base,
 		Store:             store,
 		ItemsPerPage:      i,
 		createUserChan:    make(chan *createUserOp),
@@ -55,7 +55,7 @@ func NewSite(p *Persistence, base string, store sessions.Store, ipp string) *Sit
 		getAllPostsInChannelChan: make(chan *getAllPostsInChannelOp),
 		getAllUserPostsChan:      make(chan *getAllUserPostsOp),
 		getChannelChan:           make(chan *getChannelOp),
-		getChannelByIdChan:       make(chan *getChannelByIdOp),
+		getChannelByIDChan:       make(chan *getChannelByIDOp),
 		getPostChannelsChan:      make(chan *getPostChannelsOp),
 		searchPostsChan:          make(chan *searchPostsOp),
 	}
@@ -67,7 +67,7 @@ func NewSite(p *Persistence, base string, store sessions.Store, ipp string) *Sit
 All database operations run through here to guarantee
 that there is never more than one happening at a time.
 */
-func (s *Site) Run() {
+func (s *site) Run() {
 	for {
 		select {
 		// reads first
@@ -92,8 +92,8 @@ func (s *Site) Run() {
 		case op := <-s.getChannelChan:
 			channel, err := s.p.GetChannel(op.User, op.Slug)
 			op.Resp <- channelResponse{Channel: channel, Err: err}
-		case op := <-s.getChannelByIdChan:
-			channel, err := s.p.GetChannelById(op.Id)
+		case op := <-s.getChannelByIDChan:
+			channel, err := s.p.GetChannelByID(op.ID)
 			op.Resp <- channelResponse{Channel: channel, Err: err}
 		case op := <-s.getPostChannelsChan:
 			channels, err := s.p.GetPostChannels(op.Post)
@@ -124,7 +124,7 @@ func (s *Site) Run() {
 }
 
 type userResponse struct {
-	User *User
+	User *user
 	Err  error
 }
 
@@ -134,7 +134,7 @@ type createUserOp struct {
 	Resp     chan userResponse
 }
 
-func (s *Site) CreateUser(username, password string) (*User, error) {
+func (s *site) CreateUser(username, password string) (*user, error) {
 	r := make(chan userResponse)
 	cuo := &createUserOp{Username: username, Password: password, Resp: r}
 	s.createUserChan <- cuo
@@ -147,7 +147,7 @@ type getUserOp struct {
 	Resp     chan userResponse
 }
 
-func (s *Site) GetUser(username string) (*User, error) {
+func (s *site) GetUser(username string) (*user, error) {
 	r := make(chan userResponse)
 	op := &getUserOp{Username: username, Resp: r}
 	s.getUserChan <- op
@@ -160,11 +160,11 @@ type deleteChannelResponse struct {
 }
 
 type deleteChannelOp struct {
-	Channel *Channel
+	Channel *channel
 	Resp    chan deleteChannelResponse
 }
 
-func (s *Site) DeleteChannel(c *Channel) error {
+func (s *site) DeleteChannel(c *channel) error {
 	r := make(chan deleteChannelResponse)
 	op := &deleteChannelOp{Channel: c, Resp: r}
 	s.deleteChannelChan <- op
@@ -177,11 +177,11 @@ type deletePostResponse struct {
 }
 
 type deletePostOp struct {
-	Post *Post
+	Post *post
 	Resp chan deletePostResponse
 }
 
-func (s *Site) DeletePost(c *Post) error {
+func (s *site) DeletePost(c *post) error {
 	r := make(chan deletePostResponse)
 	op := &deletePostOp{Post: c, Resp: r}
 	s.deletePostChan <- op
@@ -190,17 +190,17 @@ func (s *Site) DeletePost(c *Post) error {
 }
 
 type channelsResponse struct {
-	Channels []*Channel
+	Channels []*channel
 	Err      error
 }
 
 type addChannelsOp struct {
-	User  User
+	User  user
 	Names []string
 	Resp  chan channelsResponse
 }
 
-func (s *Site) AddChannels(u User, names []string) ([]*Channel, error) {
+func (s *site) AddChannels(u user, names []string) ([]*channel, error) {
 	r := make(chan channelsResponse)
 	op := &addChannelsOp{User: u, Names: names, Resp: r}
 	s.addChannelsChan <- op
@@ -209,11 +209,11 @@ func (s *Site) AddChannels(u User, names []string) ([]*Channel, error) {
 }
 
 type getPostChannelsOp struct {
-	Post *Post
+	Post *post
 	Resp chan channelsResponse
 }
 
-func (s *Site) GetPostChannels(p *Post) ([]*Channel, error) {
+func (s *site) GetPostChannels(p *post) ([]*channel, error) {
 	r := make(chan channelsResponse)
 	op := &getPostChannelsOp{Post: p, Resp: r}
 	s.getPostChannelsChan <- op
@@ -222,17 +222,17 @@ func (s *Site) GetPostChannels(p *Post) ([]*Channel, error) {
 }
 
 type channelResponse struct {
-	Channel *Channel
+	Channel *channel
 	Err     error
 }
 
 type getChannelOp struct {
-	User User
+	User user
 	Slug string
 	Resp chan channelResponse
 }
 
-func (s *Site) GetChannel(u User, slug string) (*Channel, error) {
+func (s *site) GetChannel(u user, slug string) (*channel, error) {
 	r := make(chan channelResponse)
 	op := &getChannelOp{User: u, Slug: slug, Resp: r}
 	s.getChannelChan <- op
@@ -240,25 +240,25 @@ func (s *Site) GetChannel(u User, slug string) (*Channel, error) {
 	return ur.Channel, ur.Err
 }
 
-type getChannelByIdOp struct {
-	Id   int
+type getChannelByIDOp struct {
+	ID   int
 	Resp chan channelResponse
 }
 
-func (s *Site) GetChannelById(id int) (*Channel, error) {
+func (s *site) GetChannelByID(id int) (*channel, error) {
 	r := make(chan channelResponse)
-	op := &getChannelByIdOp{Id: id, Resp: r}
-	s.getChannelByIdChan <- op
+	op := &getChannelByIDOp{ID: id, Resp: r}
+	s.getChannelByIDChan <- op
 	ur := <-r
 	return ur.Channel, ur.Err
 }
 
 type getUserChannelsOp struct {
-	User User
+	User user
 	Resp chan channelsResponse
 }
 
-func (s *Site) GetUserChannels(u User) ([]*Channel, error) {
+func (s *site) GetUserChannels(u user) ([]*channel, error) {
 	r := make(chan channelsResponse)
 	op := &getUserChannelsOp{User: u, Resp: r}
 	s.getUserChannelsChan <- op
@@ -267,18 +267,18 @@ func (s *Site) GetUserChannels(u User) ([]*Channel, error) {
 }
 
 type postResponse struct {
-	Post *Post
+	Post *post
 	Err  error
 }
 
 type addPostOp struct {
-	User     User
+	User     user
 	Body     string
-	Channels []*Channel
+	Channels []*channel
 	Resp     chan postResponse
 }
 
-func (s *Site) AddPost(u User, body string, channels []*Channel) (*Post, error) {
+func (s *site) AddPost(u user, body string, channels []*channel) (*post, error) {
 	r := make(chan postResponse)
 	op := &addPostOp{User: u, Body: body, Channels: channels, Resp: r}
 	s.addPostChan <- op
@@ -291,7 +291,7 @@ type getPostByUUIDOp struct {
 	Resp chan postResponse
 }
 
-func (s *Site) GetPostByUUID(uu string) (*Post, error) {
+func (s *site) GetPostByUUID(uu string) (*post, error) {
 	r := make(chan postResponse)
 	op := &getPostByUUIDOp{UUID: uu, Resp: r}
 	s.getPostByUUIDChan <- op
@@ -300,7 +300,7 @@ func (s *Site) GetPostByUUID(uu string) (*Post, error) {
 }
 
 type postsResponse struct {
-	Posts []*Post
+	Posts []*post
 	Err   error
 }
 
@@ -310,7 +310,7 @@ type getAllPostsOp struct {
 	Resp   chan postsResponse
 }
 
-func (s *Site) GetAllPosts(limit, offset int) ([]*Post, error) {
+func (s *site) GetAllPosts(limit, offset int) ([]*post, error) {
 	r := make(chan postsResponse)
 	op := &getAllPostsOp{Limit: limit, Offset: offset, Resp: r}
 	s.getAllPostsChan <- op
@@ -319,13 +319,13 @@ func (s *Site) GetAllPosts(limit, offset int) ([]*Post, error) {
 }
 
 type getAllPostsInChannelOp struct {
-	Channel Channel
+	Channel channel
 	Limit   int
 	Offset  int
 	Resp    chan postsResponse
 }
 
-func (s *Site) GetAllPostsInChannel(c Channel, limit, offset int) ([]*Post, error) {
+func (s *site) GetAllPostsInChannel(c channel, limit, offset int) ([]*post, error) {
 	r := make(chan postsResponse)
 	op := &getAllPostsInChannelOp{Channel: c, Limit: limit, Offset: offset, Resp: r}
 	s.getAllPostsInChannelChan <- op
@@ -340,7 +340,7 @@ type searchPostsOp struct {
 	Resp   chan postsResponse
 }
 
-func (s *Site) SearchPosts(q string, limit, offset int) ([]*Post, error) {
+func (s *site) SearchPosts(q string, limit, offset int) ([]*post, error) {
 	r := make(chan postsResponse)
 	op := &searchPostsOp{Q: q, Limit: limit, Offset: offset, Resp: r}
 	s.searchPostsChan <- op
@@ -349,13 +349,13 @@ func (s *Site) SearchPosts(q string, limit, offset int) ([]*Post, error) {
 }
 
 type getAllUserPostsOp struct {
-	User   *User
+	User   *user
 	Limit  int
 	Offset int
 	Resp   chan postsResponse
 }
 
-func (s *Site) GetAllUserPosts(u *User, limit, offset int) ([]*Post, error) {
+func (s *site) GetAllUserPosts(u *user, limit, offset int) ([]*post, error) {
 	r := make(chan postsResponse)
 	op := &getAllUserPostsOp{User: u, Limit: limit, Offset: offset, Resp: r}
 	s.getAllUserPostsChan <- op

@@ -8,19 +8,19 @@ import (
 	"github.com/gorilla/sessions"
 )
 
-var template_dir = "templates"
+var templateDir = "templates"
 
-func makeHandler(fn func(http.ResponseWriter, *http.Request, *Site), s *Site) http.HandlerFunc {
+func makeHandler(fn func(http.ResponseWriter, *http.Request, *site), s *site) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		fn(w, r, s)
 	}
 }
 
 func main() {
-	p := NewPersistence(os.Getenv("FINCH_DB_FILE"))
+	p := newPersistence(os.Getenv("FINCH_DB_FILE"))
 	defer p.Close()
 
-	s := NewSite(
+	s := newSite(
 		p,
 		os.Getenv("FINCH_BASE_URL"),
 		sessions.NewCookieStore([]byte(os.Getenv("FINCH_SECRET"))),

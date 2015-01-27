@@ -13,19 +13,19 @@ import (
 	"github.com/russross/blackfriday"
 )
 
-type SiteResponse struct {
+type siteResponse struct {
 	Username string
 }
 
-func (s *SiteResponse) SetUsername(username string) {
+func (s *siteResponse) SetUsername(username string) {
 	s.Username = username
 }
 
-func (s SiteResponse) GetUsername() string {
+func (s siteResponse) GetUsername() string {
 	return s.Username
 }
 
-type SR interface {
+type sr interface {
 	SetUsername(string)
 	GetUsername() string
 }
@@ -34,12 +34,12 @@ func faviconHandler(w http.ResponseWriter, r *http.Request) {
 	// just ignore this crap
 }
 
-type Context struct {
-	Site *Site
-	User *User
+type context struct {
+	Site *site
+	User *user
 }
 
-func (c *Context) Populate(r *http.Request) {
+func (c *context) Populate(r *http.Request) {
 	sess, _ := c.Site.Store.Get(r, "finch")
 	username, found := sess.Values["user"]
 	if found && username != "" {
@@ -50,21 +50,21 @@ func (c *Context) Populate(r *http.Request) {
 	}
 }
 
-func (c Context) PopulateResponse(sr SR) {
+func (c context) PopulateResponse(sr sr) {
 	if c.User != nil {
 		sr.SetUsername(c.User.Username)
 	}
 }
 
-type IndexResponse struct {
-	Posts []*Post
-	SiteResponse
+type indexResponse struct {
+	Posts []*post
+	siteResponse
 }
 
-func indexHandler(w http.ResponseWriter, r *http.Request, s *Site) {
-	ctx := Context{Site: s}
+func indexHandler(w http.ResponseWriter, r *http.Request, s *site) {
+	ctx := context{Site: s}
 	ctx.Populate(r)
-	ir := IndexResponse{}
+	ir := indexResponse{}
 	ctx.PopulateResponse(&ir)
 	posts, err := s.GetAllPosts(s.ItemsPerPage, 0)
 	ir.Posts = posts
@@ -77,17 +77,17 @@ func indexHandler(w http.ResponseWriter, r *http.Request, s *Site) {
 	tmpl.Execute(w, ir)
 }
 
-type SearchResponse struct {
-	Posts []*Post
+type searchResponse struct {
+	Posts []*post
 	Q     string
-	SiteResponse
+	siteResponse
 }
 
-func searchHandler(w http.ResponseWriter, r *http.Request, s *Site) {
-	ctx := Context{Site: s}
+func searchHandler(w http.ResponseWriter, r *http.Request, s *site) {
+	ctx := context{Site: s}
 	ctx.Populate(r)
 	q := r.FormValue("q")
-	sr := SearchResponse{Q: q}
+	sr := searchResponse{Q: q}
 	ctx.PopulateResponse(&sr)
 	posts, err := s.SearchPosts(q, s.ItemsPerPage, 0)
 	if err != nil {
@@ -99,21 +99,21 @@ func searchHandler(w http.ResponseWriter, r *http.Request, s *Site) {
 	tmpl.Execute(w, sr)
 }
 
-type AddResponse struct {
-	Channels []*Channel
+type addResponse struct {
+	Channels []*channel
 	Body     string
-	SiteResponse
+	siteResponse
 }
 
-func postHandler(w http.ResponseWriter, r *http.Request, s *Site) {
-	ctx := Context{Site: s}
+func postHandler(w http.ResponseWriter, r *http.Request, s *site) {
+	ctx := context{Site: s}
 	ctx.Populate(r)
 	if ctx.User == nil {
 		http.Redirect(w, r, "/login/", http.StatusFound)
 		return
 	}
 	if r.Method != "POST" {
-		ar := AddResponse{}
+		ar := addResponse{}
 		ctx.PopulateResponse(&ar)
 		c, err := s.GetUserChannels(*ctx.User)
 		if err != nil {
@@ -144,14 +144,14 @@ func postHandler(w http.ResponseWriter, r *http.Request, s *Site) {
 	}
 
 	// and any existing selected channels
-	for k, _ := range r.Form {
+	for k := range r.Form {
 		if strings.HasPrefix(k, "channel_") {
 			id, err := strconv.Atoi(strings.TrimPrefix(k, "channel_"))
 			if err != nil {
 				// couldn't parse it for some reason
 				continue
 			}
-			c, err := s.GetChannelById(id)
+			c, err := s.GetChannelByID(id)
 			if err != nil {
 				continue
 			}
@@ -168,7 +168,7 @@ func postHandler(w http.ResponseWriter, r *http.Request, s *Site) {
 	http.Redirect(w, r, "/", http.StatusFound)
 }
 
-func userDispatch(w http.ResponseWriter, r *http.Request, s *Site) {
+func userDispatch(w http.ResponseWriter, r *http.Request, s *site) {
 	parts := strings.Split(r.URL.String(), "/")
 	if len(parts) < 4 {
 		http.Error(w, "bad request", 400)
@@ -178,7 +178,7 @@ func userDispatch(w http.ResponseWriter, r *http.Request, s *Site) {
 		http.Error(w, "bad request", 400)
 		return
 	}
-	ctx := Context{Site: s}
+	ctx := context{Site: s}
 	username := parts[2]
 	u, err := s.GetUser(username)
 	if err != nil {
@@ -241,14 +241,14 @@ func userDispatch(w http.ResponseWriter, r *http.Request, s *Site) {
 	http.Error(w, "unknown page", 404)
 }
 
-type PostResponse struct {
-	Post *Post
-	SiteResponse
+type postPageResponse struct {
+	Post *post
+	siteResponse
 }
 
-func postPage(w http.ResponseWriter, r *http.Request, ctx Context, u *User, p *Post) {
+func postPage(w http.ResponseWriter, r *http.Request, ctx context, u *user, p *post) {
 	ctx.Populate(r)
-	pr := PostResponse{}
+	pr := postPageResponse{}
 	ctx.PopulateResponse(&pr)
 	pr.Post = p
 	channels, err := ctx.Site.GetPostChannels(p)
@@ -261,24 +261,24 @@ func postPage(w http.ResponseWriter, r *http.Request, ctx Context, u *User, p *P
 
 }
 
-type UserIndexResponse struct {
-	User     *User
-	Posts    []*Post
-	Channels []*Channel
-	SiteResponse
+type userIndexResponse struct {
+	User     *user
+	Posts    []*post
+	Channels []*channel
+	siteResponse
 }
 
-func userIndex(w http.ResponseWriter, r *http.Request, ctx Context, u *User) {
+func userIndex(w http.ResponseWriter, r *http.Request, ctx context, u *user) {
 	ctx.Populate(r)
-	ir := UserIndexResponse{User: u}
+	ir := userIndexResponse{User: u}
 	ctx.PopulateResponse(&ir)
 
-	all_posts, err := ctx.Site.GetAllUserPosts(u, ctx.Site.ItemsPerPage, 0)
+	allPosts, err := ctx.Site.GetAllUserPosts(u, ctx.Site.ItemsPerPage, 0)
 	if err != nil {
 		http.Error(w, "couldn't retrieve posts", 500)
 		return
 	}
-	ir.Posts = all_posts
+	ir.Posts = allPosts
 	c, err := ctx.Site.GetUserChannels(*u)
 	if err != nil {
 		http.Error(w, "couldn't get channels", 500)
@@ -290,19 +290,19 @@ func userIndex(w http.ResponseWriter, r *http.Request, ctx Context, u *User) {
 	tmpl.Execute(w, ir)
 }
 
-func userFeed(w http.ResponseWriter, r *http.Request, ctx Context, u *User) {
-	base := ctx.Site.BaseUrl
+func userFeed(w http.ResponseWriter, r *http.Request, ctx context, u *user) {
+	base := ctx.Site.BaseURL
 
-	all_posts, err := ctx.Site.GetAllUserPosts(u, ctx.Site.ItemsPerPage, 0)
+	allPosts, err := ctx.Site.GetAllUserPosts(u, ctx.Site.ItemsPerPage, 0)
 	if err != nil {
 		http.Error(w, "couldn't retrieve posts", 500)
 		return
 	}
-	if len(all_posts) == 0 {
+	if len(allPosts) == 0 {
 		http.Error(w, "no posts", 404)
 		return
 	}
-	latest := all_posts[0]
+	latest := allPosts[0]
 
 	feed := &feeds.Feed{
 		Title:       "Finch Feed for " + u.Username,
@@ -314,7 +314,7 @@ func userFeed(w http.ResponseWriter, r *http.Request, ctx Context, u *User) {
 	feed.Items = []*feeds.Item{}
 
 	const layout = "Jan 2, 2006 at 3:04pm (MST)"
-	for _, p := range all_posts {
+	for _, p := range allPosts {
 		feed.Items = append(feed.Items,
 			&feeds.Item{
 				Title:       u.Username + ": " + p.Time().UTC().Format(layout),
@@ -329,7 +329,7 @@ func userFeed(w http.ResponseWriter, r *http.Request, ctx Context, u *User) {
 	fmt.Fprintf(w, atom)
 }
 
-func channelDelete(w http.ResponseWriter, r *http.Request, ctx Context, u *User, c *Channel) {
+func channelDelete(w http.ResponseWriter, r *http.Request, ctx context, u *user, c *channel) {
 	if r.Method != "POST" {
 		fmt.Fprintf(w, "POST only")
 		return
@@ -339,7 +339,7 @@ func channelDelete(w http.ResponseWriter, r *http.Request, ctx Context, u *User,
 		http.Redirect(w, r, "/login/", http.StatusFound)
 		return
 	}
-	if ctx.User.Id != c.User.Id {
+	if ctx.User.ID != c.User.ID {
 		http.Error(w, "you can only delete your own channels", 403)
 		return
 	}
@@ -347,7 +347,7 @@ func channelDelete(w http.ResponseWriter, r *http.Request, ctx Context, u *User,
 	http.Redirect(w, r, "/", http.StatusFound)
 }
 
-func postDelete(w http.ResponseWriter, r *http.Request, ctx Context, u *User, p *Post) {
+func postDelete(w http.ResponseWriter, r *http.Request, ctx context, u *user, p *post) {
 	if r.Method != "POST" {
 		fmt.Fprintf(w, "POST only")
 		return
@@ -357,7 +357,7 @@ func postDelete(w http.ResponseWriter, r *http.Request, ctx Context, u *User, p 
 		http.Redirect(w, r, "/login/", http.StatusFound)
 		return
 	}
-	if ctx.User.Id != p.User.Id {
+	if ctx.User.ID != p.User.ID {
 		http.Error(w, "you can only delete your own posts", 403)
 		return
 	}
@@ -365,19 +365,19 @@ func postDelete(w http.ResponseWriter, r *http.Request, ctx Context, u *User, p 
 	http.Redirect(w, r, "/", http.StatusFound)
 }
 
-func channelFeed(w http.ResponseWriter, r *http.Request, ctx Context, u *User, c *Channel) {
-	base := ctx.Site.BaseUrl
+func channelFeed(w http.ResponseWriter, r *http.Request, ctx context, u *user, c *channel) {
+	base := ctx.Site.BaseURL
 
-	all_posts, err := ctx.Site.GetAllPostsInChannel(*c, ctx.Site.ItemsPerPage, 0)
+	allPosts, err := ctx.Site.GetAllPostsInChannel(*c, ctx.Site.ItemsPerPage, 0)
 	if err != nil {
 		http.Error(w, "couldn't retrieve posts", 500)
 		return
 	}
-	if len(all_posts) == 0 {
+	if len(allPosts) == 0 {
 		http.Error(w, "no posts", 404)
 		return
 	}
-	latest := all_posts[0]
+	latest := allPosts[0]
 
 	feed := &feeds.Feed{
 		Title:       "Finch Feed for " + u.Username + " / " + c.Label,
@@ -389,7 +389,7 @@ func channelFeed(w http.ResponseWriter, r *http.Request, ctx Context, u *User, c
 	feed.Items = []*feeds.Item{}
 
 	const layout = "Jan 2, 2006 at 3:04pm (MST)"
-	for _, p := range all_posts {
+	for _, p := range allPosts {
 		feed.Items = append(feed.Items,
 			&feeds.Item{
 				Title:       u.Username + ": " + p.Time().UTC().Format(layout),
@@ -404,37 +404,37 @@ func channelFeed(w http.ResponseWriter, r *http.Request, ctx Context, u *User, c
 	fmt.Fprintf(w, atom)
 }
 
-type ChannelIndexResponse struct {
-	Channel *Channel
-	Posts   []*Post
-	SiteResponse
+type channelIndexResponse struct {
+	Channel *channel
+	Posts   []*post
+	siteResponse
 }
 
-func channelIndex(w http.ResponseWriter, r *http.Request, ctx Context, u *User, c *Channel) {
+func channelIndex(w http.ResponseWriter, r *http.Request, ctx context, u *user, c *channel) {
 	ctx.Populate(r)
-	ir := ChannelIndexResponse{Channel: c}
+	ir := channelIndexResponse{Channel: c}
 	ctx.PopulateResponse(&ir)
 
-	all_posts, err := ctx.Site.GetAllPostsInChannel(*c, ctx.Site.ItemsPerPage, 0)
+	allPosts, err := ctx.Site.GetAllPostsInChannel(*c, ctx.Site.ItemsPerPage, 0)
 	if err != nil {
 		http.Error(w, "couldn't retrieve posts", 500)
 		return
 	}
-	ir.Posts = all_posts
+	ir.Posts = allPosts
 	tmpl := getTemplate("channel.html")
 	tmpl.Execute(w, ir)
 }
 
-func registerForm(w http.ResponseWriter, r *http.Request, s *Site) {
-	ctx := Context{Site: s}
+func registerForm(w http.ResponseWriter, r *http.Request, s *site) {
+	ctx := context{Site: s}
 	ctx.Populate(r)
-	ir := SiteResponse{}
+	ir := siteResponse{}
 	ctx.PopulateResponse(&ir)
 	tmpl := getTemplate("register.html")
 	tmpl.Execute(w, ir)
 }
 
-func registerHandler(w http.ResponseWriter, r *http.Request, s *Site) {
+func registerHandler(w http.ResponseWriter, r *http.Request, s *site) {
 	if r.Method == "GET" {
 		registerForm(w, r, s)
 		return
@@ -465,7 +465,7 @@ func loginForm(w http.ResponseWriter, req *http.Request) {
 	tmpl.Execute(w, nil)
 }
 
-func loginHandler(w http.ResponseWriter, r *http.Request, s *Site) {
+func loginHandler(w http.ResponseWriter, r *http.Request, s *site) {
 	if r.Method == "GET" {
 		loginForm(w, r)
 		return
@@ -491,7 +491,7 @@ func loginHandler(w http.ResponseWriter, r *http.Request, s *Site) {
 	http.Redirect(w, r, "/", http.StatusFound)
 }
 
-func logoutHandler(w http.ResponseWriter, r *http.Request, s *Site) {
+func logoutHandler(w http.ResponseWriter, r *http.Request, s *site) {
 	sess, _ := s.Store.Get(r, "finch")
 	delete(sess.Values, "user")
 	sess.Save(r, w)
@@ -501,7 +501,7 @@ func logoutHandler(w http.ResponseWriter, r *http.Request, s *Site) {
 func getTemplate(filename string) *template.Template {
 	var t = template.New("base.html")
 	return template.Must(t.ParseFiles(
-		filepath.Join(template_dir, "base.html"),
-		filepath.Join(template_dir, filename),
+		filepath.Join(templateDir, "base.html"),
+		filepath.Join(templateDir, filename),
 	))
 }

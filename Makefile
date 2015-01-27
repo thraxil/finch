@@ -1,3 +1,6 @@
+finch: *.go
+	go build .
+
 install_deps:
 	go get github.com/mattn/go-sqlite3
 	go get github.com/gorilla/sessions
@@ -14,9 +17,6 @@ deploy: finch
 
 run: finch .env
 	. .env && ./finch
-
-finch: *.go
-	go build .
 
 newdb:
 	sqlite3 database.db < schema.sql
