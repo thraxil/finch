@@ -13,6 +13,7 @@ RUN mkdir -p /var/lib/finch
 ENV FINCH_PORT 8000
 ENV FINCH_DB_FILE /var/lib/finch/database.db
 ENV FINCH_MEDIA_DIR /go/src/github.com/thraxil/finch/media
+ENV FINCH_TEMPLATE_DIR /go/src/github.com/thraxil/finch/templates
 ENV FINCH_ITEMS_PER_PAGE 50
 VOLUME /var/lib/finch
 EXPOSE 8000

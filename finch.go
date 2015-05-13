@@ -20,6 +20,7 @@ func main() {
 	p := newPersistence(os.Getenv("FINCH_DB_FILE"))
 	defer p.Close()
 
+	templateDir = os.Getenv("FINCH_TEMPLATE_DIR")
 	s := newSite(
 		p,
 		os.Getenv("FINCH_BASE_URL"),
