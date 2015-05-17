@@ -42,5 +42,6 @@ func main() {
 	http.HandleFunc("/favicon.ico", faviconHandler)
 	http.Handle("/media/", http.StripPrefix("/media/",
 		http.FileServer(http.Dir(os.Getenv("FINCH_MEDIA_DIR")))))
+	log.Println("running on " + os.Getenv("FINCH_PORT"))
 	log.Fatal(http.ListenAndServe(":"+os.Getenv("FINCH_PORT"), nil))
 }
