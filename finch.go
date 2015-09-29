@@ -1,6 +1,7 @@
 package main
 
 import (
+	_ "expvar"
 	"log"
 	"net/http"
 	"os"
