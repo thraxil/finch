@@ -1,3 +1,5 @@
+ROOT_DIR:=$(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
+
 finch: *.go
 	go build .
 
@@ -23,3 +25,9 @@ newdb:
 
 rmdb:
 	rm -f database.db
+
+build:
+	docker run --rm -e CGO_ENABLED=true -v $(ROOT_DIR):/src -v /var/run/docker.sock:/var/run/docker.sock centurylink/golang-builder thraxil/finch
+
+push: build
+	docker push thraxil/finch
