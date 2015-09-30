@@ -2,7 +2,6 @@ package main // import "github.com/thraxil/finch"
 
 import (
 	_ "expvar"
-	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -19,10 +18,8 @@ func makeHandler(fn func(http.ResponseWriter, *http.Request, *site), s *site) ht
 }
 
 func main() {
-	fmt.Println(os.Getenv("FINCH_DB_FILE"))
 	p := newPersistence(os.Getenv("FINCH_DB_FILE"))
 	defer p.Close()
-	fmt.Println(os.Getenv("FINCH_TEMPLATE_DIR"))
 	templateDir = os.Getenv("FINCH_TEMPLATE_DIR")
 	s := newSite(
 		p,
@@ -43,7 +40,6 @@ func main() {
 
 	// static misc.
 	http.HandleFunc("/favicon.ico", faviconHandler)
-	fmt.Println(os.Getenv("FINCH_MEDIA_DIR"))
 	http.Handle("/media/", http.StripPrefix("/media/",
 		http.FileServer(http.Dir(os.Getenv("FINCH_MEDIA_DIR")))))
 	log.Println("running on " + os.Getenv("FINCH_PORT"))
