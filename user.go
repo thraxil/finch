@@ -1,6 +1,6 @@
 package main
 
-import "code.google.com/p/go.crypto/bcrypt"
+import "golang.org/x/crypto/bcrypt"
 
 type user struct {
 	ID       int
