@@ -2,10 +2,15 @@ package main // import "github.com/thraxil/finch"
 
 import (
 	_ "expvar"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
+	"github.com/braintree/manners"
 	"github.com/gorilla/sessions"
 )
 
@@ -17,7 +22,17 @@ func makeHandler(fn func(http.ResponseWriter, *http.Request, *site), s *site) ht
 	}
 }
 
+func LoggingHandler(h http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		format := "%s - - [%s] \"%s %s %s\" %s\n"
+		fmt.Printf(format, r.RemoteAddr, time.Now().Format(time.RFC1123),
+			r.Method, r.URL.Path, r.Proto, r.UserAgent())
+		h.ServeHTTP(w, r)
+	})
+}
+
 func main() {
+	log.Println("Starting Finch...")
 	p := newPersistence(os.Getenv("FINCH_DB_FILE"))
 	defer p.Close()
 	templateDir = os.Getenv("FINCH_TEMPLATE_DIR")
@@ -27,21 +42,46 @@ func main() {
 		sessions.NewCookieStore([]byte(os.Getenv("FINCH_SECRET"))),
 		os.Getenv("FINCH_ITEMS_PER_PAGE"))
 
-	http.HandleFunc("/", makeHandler(indexHandler, s))
-	http.HandleFunc("/post/", makeHandler(postHandler, s))
-	http.HandleFunc("/search/", makeHandler(searchHandler, s))
+	mux := http.NewServeMux()
+	mux.HandleFunc("/", makeHandler(indexHandler, s))
+	mux.HandleFunc("/post/", makeHandler(postHandler, s))
+	mux.HandleFunc("/search/", makeHandler(searchHandler, s))
 
-	http.HandleFunc("/u/", makeHandler(userDispatch, s))
+	mux.HandleFunc("/u/", makeHandler(userDispatch, s))
 
 	// authy stuff
-	http.HandleFunc("/register/", makeHandler(registerHandler, s))
-	http.HandleFunc("/login/", makeHandler(loginHandler, s))
-	http.HandleFunc("/logout/", makeHandler(logoutHandler, s))
+	mux.HandleFunc("/register/", makeHandler(registerHandler, s))
+	mux.HandleFunc("/login/", makeHandler(loginHandler, s))
+	mux.HandleFunc("/logout/", makeHandler(logoutHandler, s))
 
 	// static misc.
-	http.HandleFunc("/favicon.ico", faviconHandler)
-	http.Handle("/media/", http.StripPrefix("/media/",
+	mux.HandleFunc("/favicon.ico", faviconHandler)
+	mux.Handle("/media/", http.StripPrefix("/media/",
 		http.FileServer(http.Dir(os.Getenv("FINCH_MEDIA_DIR")))))
-	log.Println("running on " + os.Getenv("FINCH_PORT"))
-	log.Fatal(http.ListenAndServe(":"+os.Getenv("FINCH_PORT"), nil))
+
+	httpServer := manners.NewServer()
+	httpServer.Addr = ":" + os.Getenv("FINCH_PORT")
+	httpServer.Handler = LoggingHandler(mux)
+
+	errChan := make(chan error, 10)
+	go func() {
+		log.Println("running on " + os.Getenv("FINCH_PORT"))
+		errChan <- httpServer.ListenAndServe()
+	}()
+
+	signalChan := make(chan os.Signal, 1)
+	signal.Notify(signalChan, syscall.SIGINT, syscall.SIGTERM)
+
+	for {
+		select {
+		case err := <-errChan:
+			if err != nil {
+				log.Fatal(err)
+			}
+		case s := <-signalChan:
+			log.Println(fmt.Sprintf("Captured %v. Exiting...", s))
+			httpServer.BlockingClose()
+			os.Exit(0)
+		}
+	}
 }

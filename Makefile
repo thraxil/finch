@@ -9,6 +9,7 @@ install_deps:
 	go get github.com/russross/blackfriday
 	go get github.com/nu7hatch/gouuid
 	go get github.com/gorilla/feeds
+	go get github.com/braintree/manners
 
 deploy: finch
 	rsync -avp media/ orlando.thraxil.org:/var/www/finch/media/
