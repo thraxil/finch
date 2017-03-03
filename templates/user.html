@@ -1,7 +1,7 @@
 {{ define "title" }}Finch: {{.User.Username}}{{ end }}
 
 {{ define "content" }}
-{{ $username := .Username }}
+{{ $username := .User.Username }}
 
 <ol class="breadcrumb">
 	<li><a href="/">Home</a></li>
