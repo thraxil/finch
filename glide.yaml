@@ -1,0 +1,12 @@
+package: github.com/thraxil/finch
+import:
+- package: github.com/braintree/manners
+  version: 82a8879fc5fd0381fa8b2d8033b19bf255252088
+- package: github.com/gorilla/feeds
+- package: github.com/gorilla/sessions
+- package: github.com/mattn/go-sqlite3
+- package: github.com/nu7hatch/gouuid
+- package: github.com/russross/blackfriday
+- package: golang.org/x/crypto
+  subpackages:
+  - bcrypt
