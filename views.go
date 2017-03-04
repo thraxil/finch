@@ -217,28 +217,33 @@ func userDispatch(w http.ResponseWriter, r *http.Request, s *site) {
 	}
 
 	if parts[3] == "p" {
-		// individual post
-		if len(parts) < 4 {
-			http.Error(w, "not found", 404)
-			return
-		}
-		puuid := parts[4]
-		p, err := s.GetPostByUUID(puuid)
-		if err != nil {
-			http.Error(w, "post not found", 404)
-			return
-		}
-
-		if len(parts) == 6 {
-			postPage(w, r, ctx, u, p)
-			return
-		}
-		if parts[5] == "delete" {
-			postDelete(w, r, ctx, u, p)
-			return
-		}
+		individualPostHandler(w, r, s, parts, ctx, u)
+		return
 	}
 
+	http.Error(w, "unknown page", 404)
+}
+
+func individualPostHandler(w http.ResponseWriter, r *http.Request, s *site, parts []string, ctx context, u *user) {
+	if len(parts) < 4 {
+		http.Error(w, "not found", 404)
+		return
+	}
+	puuid := parts[4]
+	p, err := s.GetPostByUUID(puuid)
+	if err != nil {
+		http.Error(w, "post not found", 404)
+		return
+	}
+
+	if len(parts) == 6 {
+		postPage(w, r, ctx, u, p)
+		return
+	}
+	if parts[5] == "delete" {
+		postDelete(w, r, ctx, u, p)
+		return
+	}
 	http.Error(w, "unknown page", 404)
 }
 
