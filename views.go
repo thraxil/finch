@@ -200,6 +200,7 @@ func userDispatch(w http.ResponseWriter, r *http.Request, s *site) {
 		channel, err := s.GetChannel(*u, slug)
 		if err != nil {
 			http.Error(w, "channel not found", 404)
+			return
 		}
 		if len(parts) == 6 {
 			channelIndex(w, r, ctx, u, channel)
