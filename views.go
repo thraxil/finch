@@ -196,24 +196,8 @@ func userDispatch(w http.ResponseWriter, r *http.Request, s *site) {
 	}
 
 	if parts[3] == "c" {
-		slug := parts[4]
-		channel, err := s.GetChannel(*u, slug)
-		if err != nil {
-			http.Error(w, "channel not found", 404)
-			return
-		}
-		if len(parts) == 6 {
-			channelIndex(w, r, ctx, u, channel)
-			return
-		}
-		if parts[5] == "delete" {
-			channelDelete(w, r, ctx, u, channel)
-			return
-		}
-		if parts[5] == "feed" {
-			channelFeed(w, r, ctx, u, channel)
-			return
-		}
+		channelHandler(w, r, s, parts, ctx, u)
+		return
 	}
 
 	if parts[3] == "p" {
@@ -221,6 +205,28 @@ func userDispatch(w http.ResponseWriter, r *http.Request, s *site) {
 		return
 	}
 
+	http.Error(w, "unknown page", 404)
+}
+
+func channelHandler(w http.ResponseWriter, r *http.Request, s *site, parts []string, ctx context, u *user) {
+	slug := parts[4]
+	channel, err := s.GetChannel(*u, slug)
+	if err != nil {
+		http.Error(w, "channel not found", 404)
+		return
+	}
+	if len(parts) == 6 {
+		channelIndex(w, r, ctx, u, channel)
+		return
+	}
+	if parts[5] == "delete" {
+		channelDelete(w, r, ctx, u, channel)
+		return
+	}
+	if parts[5] == "feed" {
+		channelFeed(w, r, ctx, u, channel)
+		return
+	}
 	http.Error(w, "unknown page", 404)
 }
 
