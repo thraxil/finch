@@ -105,6 +105,16 @@ type addResponse struct {
 	siteResponse
 }
 
+func bodyFromFields(url, title string) string {
+	if url != "" {
+		if title == "" {
+			title = url
+		}
+		return "#### [" + title + "](" + url + ")\n\n"
+	}
+	return ""
+}
+
 func postHandler(w http.ResponseWriter, r *http.Request, s *site) {
 	ctx := context{Site: s}
 	ctx.Populate(r)
@@ -123,12 +133,7 @@ func postHandler(w http.ResponseWriter, r *http.Request, s *site) {
 		ar.Channels = c
 		url := r.FormValue("url")
 		title := r.FormValue("title")
-		if url != "" {
-			if title == "" {
-				title = url
-			}
-			ar.Body = "#### [" + title + "](" + url + ")\n\n"
-		}
+		ar.Body = bodyFromFields(url, title)
 		tmpl := getTemplate("add.html")
 		tmpl.Execute(w, ar)
 		return
