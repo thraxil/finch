@@ -3,9 +3,6 @@ ROOT_DIR:=$(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 finch: *.go
 	go build .
 
-install_deps:
-	glide up
-
 run: finch .env
 	. .env && ./finch
 
