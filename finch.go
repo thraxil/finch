@@ -33,6 +33,7 @@ func LoggingHandler(h http.Handler) http.Handler {
 
 func main() {
 	log.Println("Starting Finch...")
+	// set up the database file
 	p := newPersistence(os.Getenv("FINCH_DB_FILE"))
 	defer p.Close()
 	templateDir = os.Getenv("FINCH_TEMPLATE_DIR")
