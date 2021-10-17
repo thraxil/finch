@@ -522,3 +522,7 @@ func getTemplate(filename string) *template.Template {
 		filepath.Join(templateDir, filename),
 	))
 }
+
+func healthzHandler(w http.ResponseWriter, _ *http.Request, _ *site) {
+	w.WriteHeader(http.StatusOK)
+}
