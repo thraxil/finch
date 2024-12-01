@@ -173,97 +173,25 @@ func postHandler(w http.ResponseWriter, r *http.Request, s *site) {
 	http.Redirect(w, r, "/", http.StatusFound)
 }
 
-func userDispatch(w http.ResponseWriter, r *http.Request, s *site) {
-	parts := strings.Split(r.URL.String(), "/")
-	if len(parts) < 4 {
-		http.Error(w, "bad request", 400)
-		return
-	}
-	if parts[1] != "u" {
-		http.Error(w, "bad request", 400)
-		return
-	}
-	ctx := context{Site: s}
-	username := parts[2]
-	u, err := s.GetUser(username)
-	if err != nil {
-		http.Error(w, "user doesn't exist", 404)
-		return
-	}
-	if len(parts) == 4 {
-		userIndex(w, r, ctx, u)
-		return
-	}
-
-	if parts[3] == "feed" {
-		userFeed(w, r, ctx, u)
-		return
-	}
-
-	if parts[3] == "c" {
-		channelHandler(w, r, s, parts, ctx, u)
-		return
-	}
-
-	if parts[3] == "p" {
-		individualPostHandler(w, r, s, parts, ctx, u)
-		return
-	}
-
-	http.Error(w, "unknown page", 404)
-}
-
-func channelHandler(w http.ResponseWriter, r *http.Request, s *site, parts []string, ctx context, u *user) {
-	slug := parts[4]
-	channel, err := s.GetChannel(*u, slug)
-	if err != nil {
-		http.Error(w, "channel not found", 404)
-		return
-	}
-	if len(parts) == 6 {
-		channelIndex(w, r, ctx, u, channel)
-		return
-	}
-	if parts[5] == "delete" {
-		channelDelete(w, r, ctx, u, channel)
-		return
-	}
-	if parts[5] == "feed" {
-		channelFeed(w, r, ctx, u, channel)
-		return
-	}
-	http.Error(w, "unknown page", 404)
-}
-
-func individualPostHandler(w http.ResponseWriter, r *http.Request, s *site, parts []string, ctx context, u *user) {
-	if len(parts) < 4 {
-		http.Error(w, "not found", 404)
-		return
-	}
-	puuid := parts[4]
-	p, err := s.GetPostByUUID(puuid)
-	if err != nil {
-		http.Error(w, "post not found", 404)
-		return
-	}
-
-	if len(parts) == 6 {
-		postPage(w, r, ctx, u, p)
-		return
-	}
-	if parts[5] == "delete" {
-		postDelete(w, r, ctx, u, p)
-		return
-	}
-	http.Error(w, "unknown page", 404)
-}
-
 type postPageResponse struct {
 	Post *post
 	siteResponse
 }
 
-func postPage(w http.ResponseWriter, r *http.Request, ctx context, u *user, p *post) {
+func individualPostHandler(w http.ResponseWriter, r *http.Request, s *site) {
+	username := r.PathValue("username")
+	puuid := r.PathValue("puuid")
+	ctx := context{Site: s}
+	_, err := s.GetUser(username)
+	if err != nil {
+		http.Error(w, "user doesn't exist", 404)
+		return
+	}
+	p, err := s.GetPostByUUID(puuid)
+	if err != nil {
+		http.Error(w, "post not found", 404)
+		return
+	}
 	ctx.Populate(r)
 	pr := postPageResponse{}
 	ctx.PopulateResponse(&pr)
@@ -275,7 +203,6 @@ func postPage(w http.ResponseWriter, r *http.Request, ctx context, u *user, p *p
 	pr.Post.Channels = channels
 	tmpl := getTemplate("post.html")
 	tmpl.Execute(w, pr)
-
 }
 
 type userIndexResponse struct {
@@ -285,7 +212,14 @@ type userIndexResponse struct {
 	siteResponse
 }
 
-func userIndex(w http.ResponseWriter, r *http.Request, ctx context, u *user) {
+func userIndex(w http.ResponseWriter, r *http.Request, s *site) {
+	username := r.PathValue("username")
+	ctx := context{Site: s}
+	u, err := s.GetUser(username)
+	if err != nil {
+		http.Error(w, "user doesn't exist", 404)
+		return
+	}
 	ctx.Populate(r)
 	ir := userIndexResponse{User: u}
 	ctx.PopulateResponse(&ir)
@@ -307,7 +241,15 @@ func userIndex(w http.ResponseWriter, r *http.Request, ctx context, u *user) {
 	tmpl.Execute(w, ir)
 }
 
-func userFeed(w http.ResponseWriter, r *http.Request, ctx context, u *user) {
+func userFeed(w http.ResponseWriter, r *http.Request, s *site) {
+	username := r.PathValue("username")
+	ctx := context{Site: s}
+	u, err := s.GetUser(username)
+	if err != nil {
+		http.Error(w, "user doesn't exist", 404)
+		return
+	}
+	ctx.Populate(r)
 	base := ctx.Site.BaseURL
 
 	allPosts, err := ctx.Site.GetAllUserPosts(u, ctx.Site.ItemsPerPage, 0)
@@ -346,9 +288,18 @@ func userFeed(w http.ResponseWriter, r *http.Request, ctx context, u *user) {
 	fmt.Fprintf(w, atom)
 }
 
-func channelDelete(w http.ResponseWriter, r *http.Request, ctx context, u *user, c *channel) {
-	if r.Method != "POST" {
-		fmt.Fprintf(w, "POST only")
+func channelDelete(w http.ResponseWriter, r *http.Request, s *site) {
+	username := r.PathValue("username")
+	slug := r.PathValue("slug")
+	ctx := context{Site: s}
+	u, err := s.GetUser(username)
+	if err != nil {
+		http.Error(w, "user doesn't exist", 404)
+		return
+	}
+	c, err := s.GetChannel(*u, slug)
+	if err != nil {
+		http.Error(w, "channel not found", 404)
 		return
 	}
 	ctx.Populate(r)
@@ -364,9 +315,18 @@ func channelDelete(w http.ResponseWriter, r *http.Request, ctx context, u *user,
 	http.Redirect(w, r, "/", http.StatusFound)
 }
 
-func postDelete(w http.ResponseWriter, r *http.Request, ctx context, u *user, p *post) {
-	if r.Method != "POST" {
-		fmt.Fprintf(w, "POST only")
+func postDelete(w http.ResponseWriter, r *http.Request, s *site) {
+	username := r.PathValue("username")
+	puuid := r.PathValue("puuid")
+	ctx := context{Site: s}
+	_, err := s.GetUser(username)
+	if err != nil {
+		http.Error(w, "user doesn't exist", 404)
+		return
+	}
+	p, err := s.GetPostByUUID(puuid)
+	if err != nil {
+		http.Error(w, "post not found", 404)
 		return
 	}
 	ctx.Populate(r)
@@ -382,7 +342,20 @@ func postDelete(w http.ResponseWriter, r *http.Request, ctx context, u *user, p 
 	http.Redirect(w, r, "/", http.StatusFound)
 }
 
-func channelFeed(w http.ResponseWriter, r *http.Request, ctx context, u *user, c *channel) {
+func channelFeed(w http.ResponseWriter, r *http.Request, s *site) {
+	username := r.PathValue("username")
+	slug := r.PathValue("slug")
+	ctx := context{Site: s}
+	u, err := s.GetUser(username)
+	if err != nil {
+		http.Error(w, "user doesn't exist", 404)
+		return
+	}
+	c, err := s.GetChannel(*u, slug)
+	if err != nil {
+		http.Error(w, "channel not found", 404)
+		return
+	}
 	base := ctx.Site.BaseURL
 
 	allPosts, err := ctx.Site.GetAllPostsInChannel(*c, ctx.Site.ItemsPerPage, 0)
@@ -427,7 +400,20 @@ type channelIndexResponse struct {
 	siteResponse
 }
 
-func channelIndex(w http.ResponseWriter, r *http.Request, ctx context, u *user, c *channel) {
+func channelIndex(w http.ResponseWriter, r *http.Request, s *site) {
+	username := r.PathValue("username")
+	slug := r.PathValue("slug")
+	ctx := context{Site: s}
+	u, err := s.GetUser(username)
+	if err != nil {
+		http.Error(w, "user doesn't exist", 404)
+		return
+	}
+	c, err := s.GetChannel(*u, slug)
+	if err != nil {
+		http.Error(w, "channel not found", 404)
+		return
+	}
 	ctx.Populate(r)
 	ir := channelIndexResponse{Channel: c}
 	ctx.PopulateResponse(&ir)

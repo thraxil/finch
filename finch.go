@@ -49,7 +49,13 @@ func main() {
 	mux.HandleFunc("/post/", makeHandler(postHandler, s))
 	mux.HandleFunc("/search/", makeHandler(searchHandler, s))
 
-	mux.HandleFunc("/u/", makeHandler(userDispatch, s))
+	mux.HandleFunc("GET /u/{username}/", makeHandler(userIndex, s))
+	mux.HandleFunc("GET /u/{username}/feed/", makeHandler(userFeed, s))
+	mux.HandleFunc("GET /u/{username}/p/{puuid}/", makeHandler(individualPostHandler, s))
+	mux.HandleFunc("POST /u/{username}/p/{puuid}/delete/", makeHandler(postDelete, s))
+	mux.HandleFunc("GET /u/{username}/c/{slug}/", makeHandler(channelIndex, s))
+	mux.HandleFunc("GET /u/{username}/c/{slug}/feed/", makeHandler(channelFeed, s))
+	mux.HandleFunc("POST /u/{username}/c/{slug}/delete/", makeHandler(channelDelete, s))
 
 	// authy stuff
 	mux.HandleFunc("/register/", makeHandler(registerHandler, s))
