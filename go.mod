@@ -1,9 +1,9 @@
 module github.com/thraxil/finch
 
-go 1.14
+go 1.17
 
 require (
-	github.com/braintree/manners v0.0.0-20160418043613-82a8879fc5fd
+	github.com/braintree/manners v0.0.0-20160418043613-82a8879fc5fd // indirect
 	github.com/gorilla/context v1.1.1 // indirect
 	github.com/gorilla/feeds v0.0.0-20160207162205-441264de03a8
 	github.com/gorilla/securecookie v1.1.1 // indirect

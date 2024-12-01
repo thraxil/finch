@@ -1,3 +1,4 @@
-finch
+/gomod2nix-template
 database.db
+finch
 .direnv

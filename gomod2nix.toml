@@ -1,0 +1,33 @@
+schema = 3
+
+[mod]
+  [mod."github.com/braintree/manners"]
+    version = "v0.0.0-20160418043613-82a8879fc5fd"
+    hash = "sha256-bT9ATNc4m5mecQXjJTzU13Hq9ujtfQy1d58w5GNzSFk="
+  [mod."github.com/gorilla/context"]
+    version = "v1.1.1"
+    hash = "sha256-pA7z/VCUIHuoP4wOeeJx+tLUFx7G8HQBjK6yfZCF5A4="
+  [mod."github.com/gorilla/feeds"]
+    version = "v0.0.0-20160207162205-441264de03a8"
+    hash = "sha256-Rdtum/f0secQmjdKyHF08sKMmg6zXi3727DpRElpcEA="
+  [mod."github.com/gorilla/securecookie"]
+    version = "v1.1.1"
+    hash = "sha256-IBBYWfdOuXvQsb01DaA8tBizCfAE1J2KLXIn3W+NeJk="
+  [mod."github.com/gorilla/sessions"]
+    version = "v0.0.0-20160922145804-ca9ada445741"
+    hash = "sha256-H9GH9iFMlLe/RBhNCCIfjmOtTdanvrSxIuS4xPUbPuI="
+  [mod."github.com/mattn/go-sqlite3"]
+    version = "v1.14.16"
+    hash = "sha256-Ky0kas72AY0lpuRiC/fQk9rw9aJ6dvL9y1Ikw5PFzlA="
+  [mod."github.com/nu7hatch/gouuid"]
+    version = "v0.0.0-20131221200532-179d4d0c4d8d"
+    hash = "sha256-kjtBbQTeMAMtNAA/W35XuOtr7VCwBDW8EZUHXnp0Xsc="
+  [mod."github.com/russross/blackfriday"]
+    version = "v0.0.0-20151110051855-0b647d0506a6"
+    hash = "sha256-lmLtL7tTqiYcC/zLQRFVW5eC8AG30EJauZllnO2uZq8="
+  [mod."github.com/shurcooL/sanitized_anchor_name"]
+    version = "v0.0.0-20160918041101-1dba4b3954bc"
+    hash = "sha256-D5uqr2Shmbm/LOzd1j6qJyhNYR8RB1VSa/Smcym6il8="
+  [mod."golang.org/x/crypto"]
+    version = "v0.17.0"
+    hash = "sha256-/vzBaeD/Ymyc7cpjBvSfJfuZ57zWa9LOaZM7b33eIx0="
