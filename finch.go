@@ -59,7 +59,8 @@ func main() {
 	mux.HandleFunc("POST /u/{username}/c/{slug}/delete/", makeHandler(channelDelete, s))
 
 	// authy stuff
-	mux.HandleFunc("/register/", makeHandler(registerHandler, s))
+	mux.HandleFunc("GET /register/", makeHandler(registerFormHandler, s))
+	mux.HandleFunc("POST /register/", makeHandler(registerHandler, s))
 	mux.HandleFunc("GET /login/", makeHandler(loginFormHandler, s))
 	mux.HandleFunc("POST /login/", makeHandler(loginHandler, s))
 	mux.HandleFunc("/logout/", makeHandler(logoutHandler, s))

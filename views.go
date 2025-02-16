@@ -444,29 +444,28 @@ func registerForm(w http.ResponseWriter, r *http.Request, s *site) {
 	tmpl.Execute(w, ir)
 }
 
+func registerFormHandler(w http.ResponseWriter, r *http.Request, s *site) {
+	registerForm(w, r, s)
+	return
+}
+
 func registerHandler(w http.ResponseWriter, r *http.Request, s *site) {
-	if r.Method == "GET" {
-		registerForm(w, r, s)
+	username, password, pass2 := r.FormValue("username"), r.FormValue("password"), r.FormValue("pass2")
+	if password != pass2 {
+		fmt.Fprintf(w, "passwords don't match")
 		return
 	}
-	if r.Method == "POST" {
-		username, password, pass2 := r.FormValue("username"), r.FormValue("password"), r.FormValue("pass2")
-		if password != pass2 {
-			fmt.Fprintf(w, "passwords don't match")
-			return
-		}
-		user, err := s.CreateUser(username, password)
+	user, err := s.CreateUser(username, password)
 
-		if err != nil {
-			fmt.Println(err)
-			fmt.Fprintf(w, "could not create user")
-			return
-		}
-
-		sess, _ := s.Store.Get(r, "finch")
-		sess.Values["user"] = user.Username
-		sess.Save(r, w)
+	if err != nil {
+		fmt.Println(err)
+		fmt.Fprintf(w, "could not create user")
+		return
 	}
+
+	sess, _ := s.Store.Get(r, "finch")
+	sess.Values["user"] = user.Username
+	sess.Save(r, w)
 	http.Redirect(w, r, "/", http.StatusFound)
 }
 
