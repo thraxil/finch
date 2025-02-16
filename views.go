@@ -63,14 +63,18 @@ func (c context) PopulateResponse(sr sr) {
 	sr.SetAllowRegistration(c.Site.AllowRegistration)
 }
 
-type indexResponse struct {
-	Posts       []*post
+type paginationResponse struct {
 	Page        int
 	NextPage    int
 	HasNextPage bool
 	PrevPage    int
 	HasPrevPage bool
+}
+
+type indexResponse struct {
+	Posts []*post
 	siteResponse
+	paginationResponse
 }
 
 func indexHandler(w http.ResponseWriter, r *http.Request, s *site) {
@@ -247,6 +251,7 @@ type userIndexResponse struct {
 	Posts    []*post
 	Channels []*channel
 	siteResponse
+	paginationResponse
 }
 
 func userIndex(w http.ResponseWriter, r *http.Request, s *site) {
@@ -261,7 +266,12 @@ func userIndex(w http.ResponseWriter, r *http.Request, s *site) {
 	ir := userIndexResponse{User: u}
 	ctx.PopulateResponse(&ir)
 
-	allPosts, err := ctx.Site.GetAllUserPosts(u, ctx.Site.ItemsPerPage, 0)
+	spage := r.URL.Query().Get("page")
+	page, err := strconv.Atoi(spage)
+	if err != nil {
+		page = 0
+	}
+	allPosts, err := ctx.Site.GetAllUserPosts(u, ctx.Site.ItemsPerPage, page*ctx.Site.ItemsPerPage)
 	if err != nil {
 		http.Error(w, "couldn't retrieve posts", 500)
 		return
@@ -273,6 +283,20 @@ func userIndex(w http.ResponseWriter, r *http.Request, s *site) {
 		return
 	}
 	ir.Channels = c
+
+	ir.Page = page + 1
+	ir.PrevPage = page - 1
+	ir.NextPage = page + 1
+	ir.HasPrevPage = false
+	ir.HasNextPage = false
+	if ir.PrevPage > -1 {
+		ir.HasPrevPage = true
+	}
+	// not the most accurate approach...
+	// sometimes there will be an empty page at the end
+	if len(ir.Posts) == s.ItemsPerPage {
+		ir.HasNextPage = true
+	}
 
 	tmpl := getTemplate("user.html")
 	tmpl.Execute(w, ir)

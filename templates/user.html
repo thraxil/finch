@@ -4,43 +4,61 @@
 {{ $username := .User.Username }}
 
 <ol class="breadcrumb">
-	<li><a href="/">Home</a></li>
-	<li class="active">{{.User.Username}}</li>
+    <li><a href="/">Home</a></li>
+    <li class="active">{{.User.Username}}</li>
 </ol>
 
 <h2><a href="feed/"><img src="/media/feed.svg" width="20" height="20" /></a> User: {{.User.Username}}</h2>
 
 {{ if .Channels }}
 <div class="panel panel-info">
-	<div class="panel-heading">Channels</div>
-  <div class="panel-body">
-{{ range .Channels }}
-<a href="/u/{{$username}}/c/{{.Slug}}/" class="btn btn-info">{{.Label}}</a>
-{{ end }}
-</div></div>
-{{ end }}
+    <div class="panel-heading">Channels</div>
+    <div class="panel-body">
+        {{ range .Channels }}
+        <a href="/u/{{$username}}/c/{{.Slug}}/" class="btn btn-info">{{.Label}}</a>
+        {{ end }}
+    </div></div>
+    {{ end }}
+
+    <ul class="pagination">
+        {{ if .HasPrevPage }}
+        <li><a href="?page={{.PrevPage}}">&laquo;</a></li>
+        {{ end }}
+        <li class="active"><span>{{.Page}}</span></li>
+        {{ if .HasNextPage }}
+        <li><a href="?page={{.NextPage}}">&raquo;</a></li>
+        {{ end }}
+    </ul>
+
+    {{ range .Posts }}
+    <div class="panel panel-default">
+        <div class="panel-body">
 
 
-{{ range .Posts }}
-<div class="panel panel-default">
-  <div class="panel-body">
+            {{.RenderBody}}
+
+            {{ if .Channels }}
+            <p>
+                {{ range .Channels }}
+                <a href="/u/{{.User.Username}}/c/{{.Slug}}/"><span class="label">{{.Label}}</span></a>
+                {{ end }}</p>
+            {{ end }}
+
+                <div class="panel-footer"><a href="/u/{{.User.Username}}/">{{.User.Username}}</a>
+                    @ <a href="{{.URL}}">{{.Time}}</a></div>
 
 
-{{.RenderBody}}
-
-{{ if .Channels }}
-<p>
-{{ range .Channels }}
-<a href="/u/{{.User.Username}}/c/{{.Slug}}/"><span class="label">{{.Label}}</span></a>
-{{ end }}</p>
-{{ end }}
-
-<div class="panel-footer"><a href="/u/{{.User.Username}}/">{{.User.Username}}</a>
- @ <a href="{{.URL}}">{{.Time}}</a></div>
-
-
-</div></div>
-{{ end }}
+        </div></div>
+        {{ end }}
+        <ul class="pagination">
+            {{ if .HasPrevPage }}
+            <li><a href="?page={{.PrevPage}}">&laquo;</a></li>
+            {{ end }}
+            <li class="active"><span>{{.Page}}</span></li>
+            {{ if .HasNextPage }}
+            <li><a href="?page={{.NextPage}}">&raquo;</a></li>
+            {{ end }}
+        </ul>
 </div>
 
 {{ end }}
