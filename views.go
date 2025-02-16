@@ -78,7 +78,7 @@ func indexHandler(w http.ResponseWriter, r *http.Request, s *site) {
 	}
 	posts, err := s.GetAllPosts(s.ItemsPerPage, page*s.ItemsPerPage)
 	ir.Posts = posts
-	ir.Page = page
+	ir.Page = page + 1
 	ir.PrevPage = page - 1
 	ir.NextPage = page + 1
 	ir.HasPrevPage = false
