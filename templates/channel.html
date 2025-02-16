@@ -10,30 +10,51 @@
 
 {{ if eq .Username .Channel.User.Username }}
 <form action="delete/" method="post" class="form pull-right">
-<input type="submit" value="delete channel" class="btn btn-xs btn-danger">
+    <input type="submit" value="delete channel" class="btn btn-xs btn-danger">
 </form>
 {{ end }}
 
 <h2><a href="feed/"><img src="/media/feed.svg" width="20" height="20" /></a> Channel: {{.Channel.Label}}</h2>
+
+<ul class="pagination">
+    {{ if .HasPrevPage }}
+    <li><a href="?page={{.PrevPage}}">&laquo;</a></li>
+    {{ end }}
+    <li class="active"><span>{{.Page}}</span></li>
+    {{ if .HasNextPage }}
+    <li><a href="?page={{.NextPage}}">&raquo;</a></li>
+    {{ end }}
+</ul>
+
 {{ range .Posts }}
 
 <div class="panel panel-default">
-  <div class="panel-body">
+    <div class="panel-body">
 
-{{.RenderBody}}
+        {{.RenderBody}}
 
-{{ if .Channels }}
-<p>
-{{ range .Channels }}
-<a href="/u/{{.User.Username}}/c/{{.Slug}}/"><span class="label">{{.Label}}</span></a>
-{{ end }}</p>
-{{ end }}
+        {{ if .Channels }}
+        <p>
+            {{ range .Channels }}
+            <a href="/u/{{.User.Username}}/c/{{.Slug}}/"><span class="label">{{.Label}}</span></a>
+            {{ end }}</p>
+        {{ end }}
 
-<div class="panel-footer"><a href="/u/{{.User.Username}}/">{{.User.Username}}</a>
- @ <a href="{{.URL}}">{{.Time}}</a></div>
+            <div class="panel-footer"><a href="/u/{{.User.Username}}/">{{.User.Username}}</a>
+                @ <a href="{{.URL}}">{{.Time}}</a></div>
 
-</div></div>
-{{ end }}
+    </div></div>
+    {{ end }}
+    <ul class="pagination">
+        {{ if .HasPrevPage }}
+        <li><a href="?page={{.PrevPage}}">&laquo;</a></li>
+        {{ end }}
+        <li class="active"><span>{{.Page}}</span></li>
+        {{ if .HasNextPage }}
+        <li><a href="?page={{.NextPage}}">&raquo;</a></li>
+        {{ end }}
+    </ul>
+
 </div>
 
 {{ end }}
