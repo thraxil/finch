@@ -46,7 +46,8 @@ func main() {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", makeHandler(indexHandler, s))
 	mux.HandleFunc("/healthz/", makeHandler(healthzHandler, s))
-	mux.HandleFunc("/post/", makeHandler(postHandler, s))
+	mux.HandleFunc("GET /post/", makeHandler(postFormHandler, s))
+	mux.HandleFunc("POST /post/", makeHandler(postHandler, s))
 	mux.HandleFunc("/search/", makeHandler(searchHandler, s))
 
 	mux.HandleFunc("GET /u/{username}/", makeHandler(userIndex, s))

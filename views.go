@@ -115,27 +115,34 @@ func bodyFromFields(url, title string) string {
 	return ""
 }
 
-func postHandler(w http.ResponseWriter, r *http.Request, s *site) {
+func postFormHandler(w http.ResponseWriter, r *http.Request, s *site) {
 	ctx := context{Site: s}
 	ctx.Populate(r)
 	if ctx.User == nil {
 		http.Redirect(w, r, "/login/", http.StatusFound)
 		return
 	}
-	if r.Method != "POST" {
-		ar := addResponse{}
-		ctx.PopulateResponse(&ar)
-		c, err := s.GetUserChannels(*ctx.User)
-		if err != nil {
-			http.Error(w, "couldn't get channels", 500)
-			return
-		}
-		ar.Channels = c
-		url := r.FormValue("url")
-		title := r.FormValue("title")
-		ar.Body = bodyFromFields(url, title)
-		tmpl := getTemplate("add.html")
-		tmpl.Execute(w, ar)
+	ar := addResponse{}
+	ctx.PopulateResponse(&ar)
+	c, err := s.GetUserChannels(*ctx.User)
+	if err != nil {
+		http.Error(w, "couldn't get channels", 500)
+		return
+	}
+	ar.Channels = c
+	url := r.FormValue("url")
+	title := r.FormValue("title")
+	ar.Body = bodyFromFields(url, title)
+	tmpl := getTemplate("add.html")
+	tmpl.Execute(w, ar)
+	return
+}
+
+func postHandler(w http.ResponseWriter, r *http.Request, s *site) {
+	ctx := context{Site: s}
+	ctx.Populate(r)
+	if ctx.User == nil {
+		http.Redirect(w, r, "/login/", http.StatusFound)
 		return
 	}
 	body := r.FormValue("body")
