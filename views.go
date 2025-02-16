@@ -475,29 +475,28 @@ func loginForm(w http.ResponseWriter, req *http.Request) {
 	tmpl.Execute(w, nil)
 }
 
+func loginFormHandler(w http.ResponseWriter, r *http.Request, s *site) {
+	loginForm(w, r)
+	return
+}
+
 func loginHandler(w http.ResponseWriter, r *http.Request, s *site) {
-	if r.Method == "GET" {
-		loginForm(w, r)
+	username, password := r.FormValue("username"), r.FormValue("password")
+	user, err := s.GetUser(username)
+
+	if err != nil {
+		fmt.Fprintf(w, "user not found")
 		return
 	}
-	if r.Method == "POST" {
-		username, password := r.FormValue("username"), r.FormValue("password")
-		user, err := s.GetUser(username)
-
-		if err != nil {
-			fmt.Fprintf(w, "user not found")
-			return
-		}
-		if !user.CheckPassword(password) {
-			fmt.Fprintf(w, "login failed")
-			return
-		}
-
-		// store userid in session
-		sess, _ := s.Store.Get(r, "finch")
-		sess.Values["user"] = user.Username
-		sess.Save(r, w)
+	if !user.CheckPassword(password) {
+		fmt.Fprintf(w, "login failed")
+		return
 	}
+
+	// store userid in session
+	sess, _ := s.Store.Get(r, "finch")
+	sess.Values["user"] = user.Username
+	sess.Save(r, w)
 	http.Redirect(w, r, "/", http.StatusFound)
 }
 

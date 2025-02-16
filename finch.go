@@ -60,7 +60,8 @@ func main() {
 
 	// authy stuff
 	mux.HandleFunc("/register/", makeHandler(registerHandler, s))
-	mux.HandleFunc("/login/", makeHandler(loginHandler, s))
+	mux.HandleFunc("GET /login/", makeHandler(loginFormHandler, s))
+	mux.HandleFunc("POST /login/", makeHandler(loginHandler, s))
 	mux.HandleFunc("/logout/", makeHandler(logoutHandler, s))
 
 	// static misc.
