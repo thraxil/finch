@@ -14,7 +14,8 @@ import (
 )
 
 type siteResponse struct {
-	Username string
+	Username          string
+	AllowRegistration bool
 }
 
 func (s *siteResponse) SetUsername(username string) {
@@ -25,9 +26,14 @@ func (s siteResponse) GetUsername() string {
 	return s.Username
 }
 
+func (s *siteResponse) SetAllowRegistration(allowReg bool) {
+	s.AllowRegistration = allowReg
+}
+
 type sr interface {
 	SetUsername(string)
 	GetUsername() string
+	SetAllowRegistration(bool)
 }
 
 func faviconHandler(w http.ResponseWriter, r *http.Request) {
@@ -54,6 +60,7 @@ func (c context) PopulateResponse(sr sr) {
 	if c.User != nil {
 		sr.SetUsername(c.User.Username)
 	}
+	sr.SetAllowRegistration(c.Site.AllowRegistration)
 }
 
 type indexResponse struct {

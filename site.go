@@ -7,10 +7,11 @@ import (
 )
 
 type site struct {
-	p            *persistence
-	BaseURL      string
-	Store        sessions.Store
-	ItemsPerPage int
+	p                 *persistence
+	BaseURL           string
+	Store             sessions.Store
+	ItemsPerPage      int
+	AllowRegistration bool
 
 	// write operation channels
 	createUserChan    chan *createUserOp
@@ -32,16 +33,21 @@ type site struct {
 	searchPostsChan          chan *searchPostsOp
 }
 
-func newSite(p *persistence, base string, store sessions.Store, ipp string) *site {
+func newSite(p *persistence, base string, store sessions.Store, ipp string, allowRegistration string) *site {
 	i, err := strconv.Atoi(ipp)
 	if err != nil {
 		i = 50
+	}
+	allowReg := false
+	if allowRegistration == "true" {
+		allowReg = true
 	}
 	s := site{
 		p:                 p,
 		BaseURL:           base,
 		Store:             store,
 		ItemsPerPage:      i,
+		AllowRegistration: allowReg,
 		createUserChan:    make(chan *createUserOp),
 		deleteChannelChan: make(chan *deleteChannelOp),
 		deletePostChan:    make(chan *deletePostOp),

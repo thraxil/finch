@@ -18,4 +18,5 @@ pkgs.mkShell {
   FINCH_MEDIA_DIR="media";
   FINCH_SECRET="not-a-real-secret";
   FINCH_ITEMS_PER_PAGE="2";
+  FINCH_ALLOW_REGISTRATION="true";
 }

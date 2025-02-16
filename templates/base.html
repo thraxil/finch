@@ -39,7 +39,7 @@ margin-bottom: 1em;}
 <li><a href="/u/{{.Username}}/">{{.Username}}</a></li>
 <li><a href="/logout/">logout</a></li>
 {{else}}
-<li><a href="/register/">register</a></li>
+{{ if .AllowRegistration }}<li><a href="/register/">register</a></li>{{ end }}
 <li><a href="/login/">login</a></li>
 {{end}}
 

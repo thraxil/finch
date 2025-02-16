@@ -41,7 +41,9 @@ func main() {
 		p,
 		os.Getenv("FINCH_BASE_URL"),
 		sessions.NewCookieStore([]byte(os.Getenv("FINCH_SECRET"))),
-		os.Getenv("FINCH_ITEMS_PER_PAGE"))
+		os.Getenv("FINCH_ITEMS_PER_PAGE"),
+		os.Getenv("FINCH_ALLOW_REGISTRATION"),
+	)
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", makeHandler(indexHandler, s))
