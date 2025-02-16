@@ -57,7 +57,12 @@ func (c context) PopulateResponse(sr sr) {
 }
 
 type indexResponse struct {
-	Posts []*post
+	Posts       []*post
+	Page        int
+	NextPage    int
+	HasNextPage bool
+	PrevPage    int
+	HasPrevPage bool
 	siteResponse
 }
 
@@ -66,8 +71,26 @@ func indexHandler(w http.ResponseWriter, r *http.Request, s *site) {
 	ctx.Populate(r)
 	ir := indexResponse{}
 	ctx.PopulateResponse(&ir)
-	posts, err := s.GetAllPosts(s.ItemsPerPage, 0)
+	spage := r.URL.Query().Get("page")
+	page, err := strconv.Atoi(spage)
+	if err != nil {
+		page = 0
+	}
+	posts, err := s.GetAllPosts(s.ItemsPerPage, page*s.ItemsPerPage)
 	ir.Posts = posts
+	ir.Page = page
+	ir.PrevPage = page - 1
+	ir.NextPage = page + 1
+	ir.HasPrevPage = false
+	ir.HasNextPage = false
+	if ir.PrevPage > -1 {
+		ir.HasPrevPage = true
+	}
+	// not the most accurate approach...
+	// sometimes there will be an empty page at the end
+	if len(posts) == s.ItemsPerPage {
+		ir.HasNextPage = true
+	}
 	if err != nil {
 		log.Println(err)
 		fmt.Fprintf(w, "error getting posts")

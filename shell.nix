@@ -12,5 +12,10 @@ pkgs.mkShell {
   shellHook = ''
   '';
 
-  MY_ENVIRONMENT_VARIABLE = "world";
+  FINCH_DB_FILE="/tmp/finch.db";
+  FINCH_PORT="9000";
+  FINCH_TEMPLATE_DIR="templates";
+  FINCH_MEDIA_DIR="media";
+  FINCH_SECRET="not-a-real-secret";
+  FINCH_ITEMS_PER_PAGE="2";
 }
