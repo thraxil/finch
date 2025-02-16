@@ -6,6 +6,7 @@ pkgs.mkShell {
     pkgs.gcc
     pkgs.libcap
     pkgs.python310
+    pkgs.sqlite
   ];
 
   shellHook = ''
