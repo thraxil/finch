@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
@@ -60,7 +61,7 @@ func run(ctx context.Context, w io.Writer, args []string) error {
 	)
 
 	httpServer := manners.NewServer()
-	httpServer.Addr = ":" + os.Getenv("FINCH_PORT")
+	httpServer.Addr = net.JoinHostPort("", os.Getenv("FINCH_PORT"))
 	httpServer.Handler = LoggingHandler(mux)
 
 	errChan := make(chan error, 10)
