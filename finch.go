@@ -42,6 +42,7 @@ func run(ctx context.Context, w io.Writer, args []string) error {
 	p := newPersistence(os.Getenv("FINCH_DB_FILE"))
 	defer p.Close()
 	templateDir = os.Getenv("FINCH_TEMPLATE_DIR")
+	mediaDir := os.Getenv("FINCH_MEDIA_DIR")
 	s := newSite(
 		p,
 		os.Getenv("FINCH_BASE_URL"),
@@ -49,33 +50,14 @@ func run(ctx context.Context, w io.Writer, args []string) error {
 		os.Getenv("FINCH_ITEMS_PER_PAGE"),
 		os.Getenv("FINCH_ALLOW_REGISTRATION"),
 	)
-
 	mux := http.NewServeMux()
-	mux.HandleFunc("/", makeHandler(indexHandler, s))
-	mux.HandleFunc("/healthz/", makeHandler(healthzHandler, s))
-	mux.HandleFunc("GET /post/", makeHandler(postFormHandler, s))
-	mux.HandleFunc("POST /post/", makeHandler(postHandler, s))
-	mux.HandleFunc("/search/", makeHandler(searchHandler, s))
-
-	mux.HandleFunc("GET /u/{username}/", makeHandler(userIndex, s))
-	mux.HandleFunc("GET /u/{username}/feed/", makeHandler(userFeed, s))
-	mux.HandleFunc("GET /u/{username}/p/{puuid}/", makeHandler(individualPostHandler, s))
-	mux.HandleFunc("POST /u/{username}/p/{puuid}/delete/", makeHandler(postDelete, s))
-	mux.HandleFunc("GET /u/{username}/c/{slug}/", makeHandler(channelIndex, s))
-	mux.HandleFunc("GET /u/{username}/c/{slug}/feed/", makeHandler(channelFeed, s))
-	mux.HandleFunc("POST /u/{username}/c/{slug}/delete/", makeHandler(channelDelete, s))
-
-	// authy stuff
-	mux.HandleFunc("GET /register/", makeHandler(registerFormHandler, s))
-	mux.HandleFunc("POST /register/", makeHandler(registerHandler, s))
-	mux.HandleFunc("GET /login/", makeHandler(loginFormHandler, s))
-	mux.HandleFunc("POST /login/", makeHandler(loginHandler, s))
-	mux.HandleFunc("/logout/", makeHandler(logoutHandler, s))
-
-	// static misc.
-	mux.HandleFunc("/favicon.ico", faviconHandler)
-	mux.Handle("/media/", http.StripPrefix("/media/",
-		http.FileServer(http.Dir(os.Getenv("FINCH_MEDIA_DIR")))))
+	addRoutes(
+		mux,
+		templateDir,
+		mediaDir,
+		s,
+		p,
+	)
 
 	httpServer := manners.NewServer()
 	httpServer.Addr = ":" + os.Getenv("FINCH_PORT")
