@@ -523,6 +523,10 @@ func registerFormHandler(w http.ResponseWriter, r *http.Request, s *site) {
 }
 
 func registerHandler(w http.ResponseWriter, r *http.Request, s *site) {
+	if !s.AllowRegistration {
+		fmt.Fprintf(w, "registration not allowed")
+		return
+	}
 	username, password, pass2 := r.FormValue("username"), r.FormValue("password"), r.FormValue("pass2")
 	if password != pass2 {
 		fmt.Fprintf(w, "passwords don't match")
