@@ -34,6 +34,25 @@ func LoggingHandler(h http.Handler) http.Handler {
 	})
 }
 
+func NewServer(
+	templateDir string,
+	mediaDir string,
+	s *site,
+	p *persistence,
+) http.Handler {
+	mux := http.NewServeMux()
+	addRoutes(
+		mux,
+		templateDir,
+		mediaDir,
+		s,
+		p,
+	)
+	var handler http.Handler = mux
+	handler = LoggingHandler(mux)
+	return handler
+}
+
 func run(ctx context.Context, w io.Writer, args []string) error {
 	ctx, cancel := signal.NotifyContext(ctx, os.Interrupt)
 	defer cancel()
@@ -51,18 +70,15 @@ func run(ctx context.Context, w io.Writer, args []string) error {
 		os.Getenv("FINCH_ITEMS_PER_PAGE"),
 		os.Getenv("FINCH_ALLOW_REGISTRATION"),
 	)
-	mux := http.NewServeMux()
-	addRoutes(
-		mux,
+	srv := NewServer(
 		templateDir,
 		mediaDir,
 		s,
 		p,
 	)
-
 	httpServer := manners.NewServer()
 	httpServer.Addr = net.JoinHostPort("", os.Getenv("FINCH_PORT"))
-	httpServer.Handler = LoggingHandler(mux)
+	httpServer.Handler = srv
 
 	errChan := make(chan error, 10)
 	go func() {
