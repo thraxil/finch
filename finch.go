@@ -1,8 +1,10 @@
 package main // import "github.com/thraxil/finch"
 
 import (
+	"context"
 	_ "expvar"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"os"
@@ -31,7 +33,10 @@ func LoggingHandler(h http.Handler) http.Handler {
 	})
 }
 
-func main() {
+func run(ctx context.Context, w io.Writer, args []string) error {
+	ctx, cancel := signal.NotifyContext(ctx, os.Interrupt)
+	defer cancel()
+
 	log.Println("Starting Finch...")
 	// set up the database file
 	p := newPersistence(os.Getenv("FINCH_DB_FILE"))
@@ -96,5 +101,14 @@ func main() {
 			httpServer.BlockingClose()
 			os.Exit(0)
 		}
+	}
+
+}
+
+func main() {
+	ctx := context.Background()
+	if err := run(ctx, os.Stdout, os.Args); err != nil {
+		fmt.Fprintf(os.Stderr, "%s\n", err)
+		os.Exit(1)
 	}
 }

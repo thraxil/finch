@@ -40,12 +40,12 @@ func faviconHandler(w http.ResponseWriter, r *http.Request) {
 	// just ignore this crap
 }
 
-type context struct {
+type siteContext struct {
 	Site *site
 	User *user
 }
 
-func (c *context) Populate(r *http.Request) {
+func (c *siteContext) Populate(r *http.Request) {
 	sess, _ := c.Site.Store.Get(r, "finch")
 	username, found := sess.Values["user"]
 	if found && username != "" {
@@ -56,7 +56,7 @@ func (c *context) Populate(r *http.Request) {
 	}
 }
 
-func (c context) PopulateResponse(sr sr) {
+func (c siteContext) PopulateResponse(sr sr) {
 	if c.User != nil {
 		sr.SetUsername(c.User.Username)
 	}
@@ -78,7 +78,7 @@ type indexResponse struct {
 }
 
 func indexHandler(w http.ResponseWriter, r *http.Request, s *site) {
-	ctx := context{Site: s}
+	ctx := siteContext{Site: s}
 	ctx.Populate(r)
 	ir := indexResponse{}
 	ctx.PopulateResponse(&ir)
@@ -118,7 +118,7 @@ type searchResponse struct {
 }
 
 func searchHandler(w http.ResponseWriter, r *http.Request, s *site) {
-	ctx := context{Site: s}
+	ctx := siteContext{Site: s}
 	ctx.Populate(r)
 	q := r.FormValue("q")
 	sr := searchResponse{Q: q}
@@ -150,7 +150,7 @@ func bodyFromFields(url, title string) string {
 }
 
 func postFormHandler(w http.ResponseWriter, r *http.Request, s *site) {
-	ctx := context{Site: s}
+	ctx := siteContext{Site: s}
 	ctx.Populate(r)
 	if ctx.User == nil {
 		http.Redirect(w, r, "/login/", http.StatusFound)
@@ -173,7 +173,7 @@ func postFormHandler(w http.ResponseWriter, r *http.Request, s *site) {
 }
 
 func postHandler(w http.ResponseWriter, r *http.Request, s *site) {
-	ctx := context{Site: s}
+	ctx := siteContext{Site: s}
 	ctx.Populate(r)
 	if ctx.User == nil {
 		http.Redirect(w, r, "/login/", http.StatusFound)
@@ -222,7 +222,7 @@ type postPageResponse struct {
 func individualPostHandler(w http.ResponseWriter, r *http.Request, s *site) {
 	username := r.PathValue("username")
 	puuid := r.PathValue("puuid")
-	ctx := context{Site: s}
+	ctx := siteContext{Site: s}
 	_, err := s.GetUser(username)
 	if err != nil {
 		http.Error(w, "user doesn't exist", 404)
@@ -256,7 +256,7 @@ type userIndexResponse struct {
 
 func userIndex(w http.ResponseWriter, r *http.Request, s *site) {
 	username := r.PathValue("username")
-	ctx := context{Site: s}
+	ctx := siteContext{Site: s}
 	u, err := s.GetUser(username)
 	if err != nil {
 		http.Error(w, "user doesn't exist", 404)
@@ -304,7 +304,7 @@ func userIndex(w http.ResponseWriter, r *http.Request, s *site) {
 
 func userFeed(w http.ResponseWriter, r *http.Request, s *site) {
 	username := r.PathValue("username")
-	ctx := context{Site: s}
+	ctx := siteContext{Site: s}
 	u, err := s.GetUser(username)
 	if err != nil {
 		http.Error(w, "user doesn't exist", 404)
@@ -352,7 +352,7 @@ func userFeed(w http.ResponseWriter, r *http.Request, s *site) {
 func channelDelete(w http.ResponseWriter, r *http.Request, s *site) {
 	username := r.PathValue("username")
 	slug := r.PathValue("slug")
-	ctx := context{Site: s}
+	ctx := siteContext{Site: s}
 	u, err := s.GetUser(username)
 	if err != nil {
 		http.Error(w, "user doesn't exist", 404)
@@ -379,7 +379,7 @@ func channelDelete(w http.ResponseWriter, r *http.Request, s *site) {
 func postDelete(w http.ResponseWriter, r *http.Request, s *site) {
 	username := r.PathValue("username")
 	puuid := r.PathValue("puuid")
-	ctx := context{Site: s}
+	ctx := siteContext{Site: s}
 	_, err := s.GetUser(username)
 	if err != nil {
 		http.Error(w, "user doesn't exist", 404)
@@ -406,7 +406,7 @@ func postDelete(w http.ResponseWriter, r *http.Request, s *site) {
 func channelFeed(w http.ResponseWriter, r *http.Request, s *site) {
 	username := r.PathValue("username")
 	slug := r.PathValue("slug")
-	ctx := context{Site: s}
+	ctx := siteContext{Site: s}
 	u, err := s.GetUser(username)
 	if err != nil {
 		http.Error(w, "user doesn't exist", 404)
@@ -465,7 +465,7 @@ type channelIndexResponse struct {
 func channelIndex(w http.ResponseWriter, r *http.Request, s *site) {
 	username := r.PathValue("username")
 	slug := r.PathValue("slug")
-	ctx := context{Site: s}
+	ctx := siteContext{Site: s}
 	u, err := s.GetUser(username)
 	if err != nil {
 		http.Error(w, "user doesn't exist", 404)
@@ -509,7 +509,7 @@ func channelIndex(w http.ResponseWriter, r *http.Request, s *site) {
 }
 
 func registerForm(w http.ResponseWriter, r *http.Request, s *site) {
-	ctx := context{Site: s}
+	ctx := siteContext{Site: s}
 	ctx.Populate(r)
 	ir := siteResponse{}
 	ctx.PopulateResponse(&ir)
