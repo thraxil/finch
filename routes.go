@@ -2,6 +2,12 @@ package main
 
 import "net/http"
 
+func makeHandler(fn func(http.ResponseWriter, *http.Request, *site), s *site) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		fn(w, r, s)
+	}
+}
+
 func addRoutes(
 	mux *http.ServeMux,
 	templateDir string,
@@ -10,7 +16,7 @@ func addRoutes(
 	p *persistence,
 
 ) {
-	mux.HandleFunc("/", makeHandler(indexHandler, s))
+	mux.Handle("/", indexHandler(s))
 	mux.HandleFunc("/healthz/", makeHandler(healthzHandler, s))
 	mux.HandleFunc("GET /post/", makeHandler(postFormHandler, s))
 	mux.HandleFunc("POST /post/", makeHandler(postHandler, s))

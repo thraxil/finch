@@ -19,12 +19,6 @@ import (
 
 var templateDir = "templates"
 
-func makeHandler(fn func(http.ResponseWriter, *http.Request, *site), s *site) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		fn(w, r, s)
-	}
-}
-
 func LoggingHandler(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		format := "%s - - [%s] \"%s %s %s\" %s\n"

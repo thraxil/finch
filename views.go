@@ -71,44 +71,48 @@ type paginationResponse struct {
 	HasPrevPage bool
 }
 
-type indexResponse struct {
-	Posts []*post
-	siteResponse
-	paginationResponse
-}
+func indexHandler(s *site) http.Handler {
+	type indexResponse struct {
+		Posts []*post
+		siteResponse
+		paginationResponse
+	}
 
-func indexHandler(w http.ResponseWriter, r *http.Request, s *site) {
-	ctx := siteContext{Site: s}
-	ctx.Populate(r)
-	ir := indexResponse{}
-	ctx.PopulateResponse(&ir)
-	spage := r.URL.Query().Get("page")
-	page, err := strconv.Atoi(spage)
-	if err != nil {
-		page = 0
-	}
-	posts, err := s.GetAllPosts(s.ItemsPerPage, page*s.ItemsPerPage)
-	ir.Posts = posts
-	ir.Page = page + 1
-	ir.PrevPage = page - 1
-	ir.NextPage = page + 1
-	ir.HasPrevPage = false
-	ir.HasNextPage = false
-	if ir.PrevPage > -1 {
-		ir.HasPrevPage = true
-	}
-	// not the most accurate approach...
-	// sometimes there will be an empty page at the end
-	if len(posts) == s.ItemsPerPage {
-		ir.HasNextPage = true
-	}
-	if err != nil {
-		log.Println(err)
-		fmt.Fprintf(w, "error getting posts")
-		return
-	}
 	tmpl := getTemplate("index.html")
-	tmpl.Execute(w, ir)
+
+	return http.HandlerFunc(
+		func(w http.ResponseWriter, r *http.Request) {
+			ctx := siteContext{Site: s}
+			ctx.Populate(r)
+			ir := indexResponse{}
+			ctx.PopulateResponse(&ir)
+			spage := r.URL.Query().Get("page")
+			page, err := strconv.Atoi(spage)
+			if err != nil {
+				page = 0
+			}
+			posts, err := s.GetAllPosts(s.ItemsPerPage, page*s.ItemsPerPage)
+			ir.Posts = posts
+			ir.Page = page + 1
+			ir.PrevPage = page - 1
+			ir.NextPage = page + 1
+			ir.HasPrevPage = false
+			ir.HasNextPage = false
+			if ir.PrevPage > -1 {
+				ir.HasPrevPage = true
+			}
+			// not the most accurate approach...
+			// sometimes there will be an empty page at the end
+			if len(posts) == s.ItemsPerPage {
+				ir.HasNextPage = true
+			}
+			if err != nil {
+				log.Println(err)
+				fmt.Fprintf(w, "error getting posts")
+				return
+			}
+			tmpl.Execute(w, ir)
+		})
 }
 
 type searchResponse struct {
