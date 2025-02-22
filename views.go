@@ -182,46 +182,49 @@ func postFormHandler(s *site) http.Handler {
 		})
 }
 
-func postHandler(w http.ResponseWriter, r *http.Request, s *site) {
-	ctx := siteContext{Site: s}
-	ctx.Populate(r)
-	if ctx.User == nil {
-		http.Redirect(w, r, "/login/", http.StatusFound)
-		return
-	}
-	body := r.FormValue("body")
-	nchan := make([]string, 3)
-	nchan[0], nchan[1], nchan[2] = r.FormValue("new_channel0"), r.FormValue("new_channel1"), r.FormValue("new_channel2")
-	channels, err := s.AddChannels(*ctx.User, nchan)
-	if err != nil {
-		log.Fatal(err)
-		fmt.Fprintf(w, "error making channels")
-		return
-	}
-
-	// and any existing selected channels
-	for k := range r.Form {
-		if strings.HasPrefix(k, "channel_") {
-			id, err := strconv.Atoi(strings.TrimPrefix(k, "channel_"))
-			if err != nil {
-				// couldn't parse it for some reason
-				continue
+func postHandler(s *site) http.Handler {
+	return http.HandlerFunc(
+		func(w http.ResponseWriter, r *http.Request) {
+			ctx := siteContext{Site: s}
+			ctx.Populate(r)
+			if ctx.User == nil {
+				http.Redirect(w, r, "/login/", http.StatusFound)
+				return
 			}
-			c, err := s.GetChannelByID(id)
+			body := r.FormValue("body")
+			nchan := make([]string, 3)
+			nchan[0], nchan[1], nchan[2] = r.FormValue("new_channel0"), r.FormValue("new_channel1"), r.FormValue("new_channel2")
+			channels, err := s.AddChannels(*ctx.User, nchan)
 			if err != nil {
-				continue
+				log.Fatal(err)
+				fmt.Fprintf(w, "error making channels")
+				return
 			}
-			channels = append(channels, c)
-		}
-	}
 
-	_, err = s.AddPost(*ctx.User, body, channels)
-	if err != nil {
-		log.Fatal(err)
-		fmt.Fprintf(w, "could not add post")
-		return
-	}
-	http.Redirect(w, r, "/", http.StatusFound)
+			// and any existing selected channels
+			for k := range r.Form {
+				if strings.HasPrefix(k, "channel_") {
+					id, err := strconv.Atoi(strings.TrimPrefix(k, "channel_"))
+					if err != nil {
+						// couldn't parse it for some reason
+						continue
+					}
+					c, err := s.GetChannelByID(id)
+					if err != nil {
+						continue
+					}
+					channels = append(channels, c)
+				}
+			}
+
+			_, err = s.AddPost(*ctx.User, body, channels)
+			if err != nil {
+				log.Fatal(err)
+				fmt.Fprintf(w, "could not add post")
+				return
+			}
+			http.Redirect(w, r, "/", http.StatusFound)
+		})
 }
 
 type postPageResponse struct {
