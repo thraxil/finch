@@ -115,26 +115,30 @@ func indexHandler(s *site) http.Handler {
 		})
 }
 
-type searchResponse struct {
-	Posts []*post
-	Q     string
-	siteResponse
-}
+func searchHandler(s *site) http.Handler {
 
-func searchHandler(w http.ResponseWriter, r *http.Request, s *site) {
-	ctx := siteContext{Site: s}
-	ctx.Populate(r)
-	q := r.FormValue("q")
-	sr := searchResponse{Q: q}
-	ctx.PopulateResponse(&sr)
-	posts, err := s.SearchPosts(q, s.ItemsPerPage, 0)
-	if err != nil {
-		http.Error(w, "search broke", 500)
-		return
+	type searchResponse struct {
+		Posts []*post
+		Q     string
+		siteResponse
 	}
-	sr.Posts = posts
 	tmpl := getTemplate("search.html")
-	tmpl.Execute(w, sr)
+
+	return http.HandlerFunc(
+		func(w http.ResponseWriter, r *http.Request) {
+			ctx := siteContext{Site: s}
+			ctx.Populate(r)
+			q := r.FormValue("q")
+			sr := searchResponse{Q: q}
+			ctx.PopulateResponse(&sr)
+			posts, err := s.SearchPosts(q, s.ItemsPerPage, 0)
+			if err != nil {
+				http.Error(w, "search broke", 500)
+				return
+			}
+			sr.Posts = posts
+			tmpl.Execute(w, sr)
+		})
 }
 
 type addResponse struct {
