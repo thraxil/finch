@@ -116,7 +116,6 @@ func indexHandler(s *site) http.Handler {
 }
 
 func searchHandler(s *site) http.Handler {
-
 	type searchResponse struct {
 		Posts []*post
 		Q     string
@@ -599,6 +598,6 @@ func getTemplate(filename string) *template.Template {
 	))
 }
 
-func healthzHandler(w http.ResponseWriter, _ *http.Request, _ *site) {
+func healthzHandler(w http.ResponseWriter, _ *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }

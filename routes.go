@@ -17,7 +17,7 @@ func addRoutes(
 
 ) {
 	mux.Handle("/", indexHandler(s))
-	mux.HandleFunc("/healthz/", makeHandler(healthzHandler, s))
+	mux.HandleFunc("/healthz/", healthzHandler)
 	mux.HandleFunc("GET /post/", makeHandler(postFormHandler, s))
 	mux.HandleFunc("POST /post/", makeHandler(postHandler, s))
 	mux.Handle("/search/", searchHandler(s))
