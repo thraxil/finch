@@ -227,36 +227,38 @@ func postHandler(s *site) http.Handler {
 		})
 }
 
-type postPageResponse struct {
-	Post *post
-	siteResponse
-}
-
-func individualPostHandler(w http.ResponseWriter, r *http.Request, s *site) {
-	username := r.PathValue("username")
-	puuid := r.PathValue("puuid")
-	ctx := siteContext{Site: s}
-	_, err := s.GetUser(username)
-	if err != nil {
-		http.Error(w, "user doesn't exist", 404)
-		return
+func individualPostHandler(s *site) http.Handler {
+	type postPageResponse struct {
+		Post *post
+		siteResponse
 	}
-	p, err := s.GetPostByUUID(puuid)
-	if err != nil {
-		http.Error(w, "post not found", 404)
-		return
-	}
-	ctx.Populate(r)
-	pr := postPageResponse{}
-	ctx.PopulateResponse(&pr)
-	pr.Post = p
-	channels, err := ctx.Site.GetPostChannels(p)
-	if err != nil {
-		http.Error(w, "error retrieving channels", 500)
-	}
-	pr.Post.Channels = channels
 	tmpl := getTemplate("post.html")
-	tmpl.Execute(w, pr)
+	return http.HandlerFunc(
+		func(w http.ResponseWriter, r *http.Request) {
+			username := r.PathValue("username")
+			puuid := r.PathValue("puuid")
+			ctx := siteContext{Site: s}
+			_, err := s.GetUser(username)
+			if err != nil {
+				http.Error(w, "user doesn't exist", 404)
+				return
+			}
+			p, err := s.GetPostByUUID(puuid)
+			if err != nil {
+				http.Error(w, "post not found", 404)
+				return
+			}
+			ctx.Populate(r)
+			pr := postPageResponse{}
+			ctx.PopulateResponse(&pr)
+			pr.Post = p
+			channels, err := ctx.Site.GetPostChannels(p)
+			if err != nil {
+				http.Error(w, "error retrieving channels", 500)
+			}
+			pr.Post.Channels = channels
+			tmpl.Execute(w, pr)
+		})
 }
 
 type userIndexResponse struct {

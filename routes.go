@@ -24,7 +24,7 @@ func addRoutes(
 
 	mux.HandleFunc("GET /u/{username}/", makeHandler(userIndex, s))
 	mux.HandleFunc("GET /u/{username}/feed/", makeHandler(userFeed, s))
-	mux.HandleFunc("GET /u/{username}/p/{puuid}/", makeHandler(individualPostHandler, s))
+	mux.Handle("GET /u/{username}/p/{puuid}/", individualPostHandler(s))
 	mux.HandleFunc("POST /u/{username}/p/{puuid}/delete/", makeHandler(postDelete, s))
 	mux.HandleFunc("GET /u/{username}/c/{slug}/", makeHandler(channelIndex, s))
 	mux.HandleFunc("GET /u/{username}/c/{slug}/feed/", makeHandler(channelFeed, s))
