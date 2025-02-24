@@ -47,22 +47,28 @@ func NewServer(
 	return handler
 }
 
-func run(ctx context.Context, w io.Writer, args []string) error {
+func run(ctx context.Context,
+	w io.Writer,
+	args []string,
+	getenv func(string) string,
+	stdin io.Reader,
+	stdout, stderr io.Writer,
+) error {
 	ctx, cancel := signal.NotifyContext(ctx, os.Interrupt)
 	defer cancel()
 
 	log.Println("Starting Finch...")
 	// set up the database file
-	p := newPersistence(os.Getenv("FINCH_DB_FILE"))
+	p := newPersistence(getenv("FINCH_DB_FILE"))
 	defer p.Close()
-	templateDir = os.Getenv("FINCH_TEMPLATE_DIR")
-	mediaDir := os.Getenv("FINCH_MEDIA_DIR")
+	templateDir = getenv("FINCH_TEMPLATE_DIR")
+	mediaDir := getenv("FINCH_MEDIA_DIR")
 	s := newSite(
 		p,
-		os.Getenv("FINCH_BASE_URL"),
-		sessions.NewCookieStore([]byte(os.Getenv("FINCH_SECRET"))),
-		os.Getenv("FINCH_ITEMS_PER_PAGE"),
-		os.Getenv("FINCH_ALLOW_REGISTRATION"),
+		getenv("FINCH_BASE_URL"),
+		sessions.NewCookieStore([]byte(getenv("FINCH_SECRET"))),
+		getenv("FINCH_ITEMS_PER_PAGE"),
+		getenv("FINCH_ALLOW_REGISTRATION"),
 	)
 	srv := NewServer(
 		templateDir,
@@ -71,12 +77,12 @@ func run(ctx context.Context, w io.Writer, args []string) error {
 		p,
 	)
 	httpServer := manners.NewServer()
-	httpServer.Addr = net.JoinHostPort("", os.Getenv("FINCH_PORT"))
+	httpServer.Addr = net.JoinHostPort("", getenv("FINCH_PORT"))
 	httpServer.Handler = srv
 
 	errChan := make(chan error, 10)
 	go func() {
-		log.Println("running on " + os.Getenv("FINCH_PORT"))
+		log.Println("running on " + getenv("FINCH_PORT"))
 		errChan <- httpServer.ListenAndServe()
 	}()
 
@@ -100,7 +106,7 @@ func run(ctx context.Context, w io.Writer, args []string) error {
 
 func main() {
 	ctx := context.Background()
-	if err := run(ctx, os.Stdout, os.Args); err != nil {
+	if err := run(ctx, os.Stdout, os.Args, os.Getenv, os.Stdin, os.Stdout, os.Stderr); err != nil {
 		fmt.Fprintf(os.Stderr, "%s\n", err)
 		os.Exit(1)
 	}
