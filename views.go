@@ -320,51 +320,54 @@ func userIndex(s *site) http.Handler {
 		})
 }
 
-func userFeed(w http.ResponseWriter, r *http.Request, s *site) {
-	username := r.PathValue("username")
-	ctx := siteContext{Site: s}
-	u, err := s.GetUser(username)
-	if err != nil {
-		http.Error(w, "user doesn't exist", 404)
-		return
-	}
-	ctx.Populate(r)
-	base := ctx.Site.BaseURL
+func userFeed(s *site) http.Handler {
+	return http.HandlerFunc(
+		func(w http.ResponseWriter, r *http.Request) {
+			username := r.PathValue("username")
+			ctx := siteContext{Site: s}
+			u, err := s.GetUser(username)
+			if err != nil {
+				http.Error(w, "user doesn't exist", 404)
+				return
+			}
+			ctx.Populate(r)
+			base := ctx.Site.BaseURL
 
-	allPosts, err := ctx.Site.GetAllUserPosts(u, ctx.Site.ItemsPerPage, 0)
-	if err != nil {
-		http.Error(w, "couldn't retrieve posts", 500)
-		return
-	}
-	if len(allPosts) == 0 {
-		http.Error(w, "no posts", 404)
-		return
-	}
-	latest := allPosts[0]
+			allPosts, err := ctx.Site.GetAllUserPosts(u, ctx.Site.ItemsPerPage, 0)
+			if err != nil {
+				http.Error(w, "couldn't retrieve posts", 500)
+				return
+			}
+			if len(allPosts) == 0 {
+				http.Error(w, "no posts", 404)
+				return
+			}
+			latest := allPosts[0]
 
-	feed := &feeds.Feed{
-		Title:       "Finch Feed for " + u.Username,
-		Link:        &feeds.Link{Href: base + "/u/" + u.Username + "/feed/"},
-		Description: "Finch feed",
-		Author:      &feeds.Author{Name: u.Username, Email: u.Username},
-		Created:     latest.Time(),
-	}
-	feed.Items = []*feeds.Item{}
-
-	const layout = "Jan 2, 2006 at 3:04pm (MST)"
-	for _, p := range allPosts {
-		feed.Items = append(feed.Items,
-			&feeds.Item{
-				Title:       u.Username + ": " + p.Time().UTC().Format(layout),
-				Link:        &feeds.Link{Href: base + p.URL()},
-				Description: string(blackfriday.MarkdownBasic([]byte(p.Body))),
+			feed := &feeds.Feed{
+				Title:       "Finch Feed for " + u.Username,
+				Link:        &feeds.Link{Href: base + "/u/" + u.Username + "/feed/"},
+				Description: "Finch feed",
 				Author:      &feeds.Author{Name: u.Username, Email: u.Username},
-				Created:     p.Time(),
-			})
-	}
-	atom, _ := feed.ToAtom()
-	w.Header().Set("Content-Type", "application/atom+xml")
-	fmt.Fprintf(w, atom)
+				Created:     latest.Time(),
+			}
+			feed.Items = []*feeds.Item{}
+
+			const layout = "Jan 2, 2006 at 3:04pm (MST)"
+			for _, p := range allPosts {
+				feed.Items = append(feed.Items,
+					&feeds.Item{
+						Title:       u.Username + ": " + p.Time().UTC().Format(layout),
+						Link:        &feeds.Link{Href: base + p.URL()},
+						Description: string(blackfriday.MarkdownBasic([]byte(p.Body))),
+						Author:      &feeds.Author{Name: u.Username, Email: u.Username},
+						Created:     p.Time(),
+					})
+			}
+			atom, _ := feed.ToAtom()
+			w.Header().Set("Content-Type", "application/atom+xml")
+			fmt.Fprintf(w, atom)
+		})
 }
 
 func channelDelete(w http.ResponseWriter, r *http.Request, s *site) {
