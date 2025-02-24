@@ -610,11 +610,14 @@ func loginHandler(s *site) http.Handler {
 		})
 }
 
-func logoutHandler(w http.ResponseWriter, r *http.Request, s *site) {
-	sess, _ := s.Store.Get(r, "finch")
-	delete(sess.Values, "user")
-	sess.Save(r, w)
-	http.Redirect(w, r, "/", http.StatusFound)
+func logoutHandler(s *site) http.Handler {
+	return http.HandlerFunc(
+		func(w http.ResponseWriter, r *http.Request) {
+			sess, _ := s.Store.Get(r, "finch")
+			delete(sess.Values, "user")
+			sess.Save(r, w)
+			http.Redirect(w, r, "/", http.StatusFound)
+		})
 }
 
 func getTemplate(filename string) *template.Template {

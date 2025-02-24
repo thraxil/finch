@@ -2,12 +2,6 @@ package main
 
 import "net/http"
 
-func makeHandler(fn func(http.ResponseWriter, *http.Request, *site), s *site) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		fn(w, r, s)
-	}
-}
-
 func addRoutes(
 	mux *http.ServeMux,
 	templateDir string,
@@ -35,7 +29,7 @@ func addRoutes(
 	mux.Handle("POST /register/", registerHandler(s))
 	mux.Handle("GET /login/", loginFormHandler(s))
 	mux.Handle("POST /login/", loginHandler(s))
-	mux.HandleFunc("/logout/", makeHandler(logoutHandler, s))
+	mux.Handle("/logout/", logoutHandler(s))
 
 	// static misc.
 	mux.HandleFunc("/favicon.ico", faviconHandler)
