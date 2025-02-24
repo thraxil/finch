@@ -22,7 +22,7 @@ func addRoutes(
 	mux.Handle("POST /post/", postHandler(s))
 	mux.Handle("/search/", searchHandler(s))
 
-	mux.HandleFunc("GET /u/{username}/", makeHandler(userIndex, s))
+	mux.Handle("GET /u/{username}/", userIndex(s))
 	mux.HandleFunc("GET /u/{username}/feed/", makeHandler(userFeed, s))
 	mux.Handle("GET /u/{username}/p/{puuid}/", individualPostHandler(s))
 	mux.HandleFunc("POST /u/{username}/p/{puuid}/delete/", makeHandler(postDelete, s))

@@ -261,60 +261,63 @@ func individualPostHandler(s *site) http.Handler {
 		})
 }
 
-type userIndexResponse struct {
-	User     *user
-	Posts    []*post
-	Channels []*channel
-	siteResponse
-	paginationResponse
-}
-
-func userIndex(w http.ResponseWriter, r *http.Request, s *site) {
-	username := r.PathValue("username")
-	ctx := siteContext{Site: s}
-	u, err := s.GetUser(username)
-	if err != nil {
-		http.Error(w, "user doesn't exist", 404)
-		return
+func userIndex(s *site) http.Handler {
+	type userIndexResponse struct {
+		User     *user
+		Posts    []*post
+		Channels []*channel
+		siteResponse
+		paginationResponse
 	}
-	ctx.Populate(r)
-	ir := userIndexResponse{User: u}
-	ctx.PopulateResponse(&ir)
-
-	spage := r.URL.Query().Get("page")
-	page, err := strconv.Atoi(spage)
-	if err != nil {
-		page = 0
-	}
-	allPosts, err := ctx.Site.GetAllUserPosts(u, ctx.Site.ItemsPerPage, page*ctx.Site.ItemsPerPage)
-	if err != nil {
-		http.Error(w, "couldn't retrieve posts", 500)
-		return
-	}
-	ir.Posts = allPosts
-	c, err := ctx.Site.GetUserChannels(*u)
-	if err != nil {
-		http.Error(w, "couldn't get channels", 500)
-		return
-	}
-	ir.Channels = c
-
-	ir.Page = page + 1
-	ir.PrevPage = page - 1
-	ir.NextPage = page + 1
-	ir.HasPrevPage = false
-	ir.HasNextPage = false
-	if ir.PrevPage > -1 {
-		ir.HasPrevPage = true
-	}
-	// not the most accurate approach...
-	// sometimes there will be an empty page at the end
-	if len(ir.Posts) == s.ItemsPerPage {
-		ir.HasNextPage = true
-	}
-
 	tmpl := getTemplate("user.html")
-	tmpl.Execute(w, ir)
+	return http.HandlerFunc(
+		func(w http.ResponseWriter, r *http.Request) {
+
+			username := r.PathValue("username")
+			ctx := siteContext{Site: s}
+			u, err := s.GetUser(username)
+			if err != nil {
+				http.Error(w, "user doesn't exist", 404)
+				return
+			}
+			ctx.Populate(r)
+			ir := userIndexResponse{User: u}
+			ctx.PopulateResponse(&ir)
+
+			spage := r.URL.Query().Get("page")
+			page, err := strconv.Atoi(spage)
+			if err != nil {
+				page = 0
+			}
+			allPosts, err := ctx.Site.GetAllUserPosts(u, ctx.Site.ItemsPerPage, page*ctx.Site.ItemsPerPage)
+			if err != nil {
+				http.Error(w, "couldn't retrieve posts", 500)
+				return
+			}
+			ir.Posts = allPosts
+			c, err := ctx.Site.GetUserChannels(*u)
+			if err != nil {
+				http.Error(w, "couldn't get channels", 500)
+				return
+			}
+			ir.Channels = c
+
+			ir.Page = page + 1
+			ir.PrevPage = page - 1
+			ir.NextPage = page + 1
+			ir.HasPrevPage = false
+			ir.HasNextPage = false
+			if ir.PrevPage > -1 {
+				ir.HasPrevPage = true
+			}
+			// not the most accurate approach...
+			// sometimes there will be an empty page at the end
+			if len(ir.Posts) == s.ItemsPerPage {
+				ir.HasNextPage = true
+			}
+
+			tmpl.Execute(w, ir)
+		})
 }
 
 func userFeed(w http.ResponseWriter, r *http.Request, s *site) {
