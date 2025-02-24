@@ -587,24 +587,27 @@ func loginFormHandler(s *site) http.Handler {
 		})
 }
 
-func loginHandler(w http.ResponseWriter, r *http.Request, s *site) {
-	username, password := r.FormValue("username"), r.FormValue("password")
-	user, err := s.GetUser(username)
+func loginHandler(s *site) http.Handler {
+	return http.HandlerFunc(
+		func(w http.ResponseWriter, r *http.Request) {
+			username, password := r.FormValue("username"), r.FormValue("password")
+			user, err := s.GetUser(username)
 
-	if err != nil {
-		fmt.Fprintf(w, "user not found")
-		return
-	}
-	if !user.CheckPassword(password) {
-		fmt.Fprintf(w, "login failed")
-		return
-	}
+			if err != nil {
+				fmt.Fprintf(w, "user not found")
+				return
+			}
+			if !user.CheckPassword(password) {
+				fmt.Fprintf(w, "login failed")
+				return
+			}
 
-	// store userid in session
-	sess, _ := s.Store.Get(r, "finch")
-	sess.Values["user"] = user.Username
-	sess.Save(r, w)
-	http.Redirect(w, r, "/", http.StatusFound)
+			// store userid in session
+			sess, _ := s.Store.Get(r, "finch")
+			sess.Values["user"] = user.Username
+			sess.Save(r, w)
+			http.Redirect(w, r, "/", http.StatusFound)
+		})
 }
 
 func logoutHandler(w http.ResponseWriter, r *http.Request, s *site) {

@@ -34,7 +34,7 @@ func addRoutes(
 	mux.Handle("GET /register/", registerFormHandler(s))
 	mux.Handle("POST /register/", registerHandler(s))
 	mux.Handle("GET /login/", loginFormHandler(s))
-	mux.HandleFunc("POST /login/", makeHandler(loginHandler, s))
+	mux.Handle("POST /login/", loginHandler(s))
 	mux.HandleFunc("/logout/", makeHandler(logoutHandler, s))
 
 	// static misc.
