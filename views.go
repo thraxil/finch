@@ -552,28 +552,31 @@ func registerFormHandler(s *site) http.Handler {
 		})
 }
 
-func registerHandler(w http.ResponseWriter, r *http.Request, s *site) {
-	if !s.AllowRegistration {
-		fmt.Fprintf(w, "registration not allowed")
-		return
-	}
-	username, password, pass2 := r.FormValue("username"), r.FormValue("password"), r.FormValue("pass2")
-	if password != pass2 {
-		fmt.Fprintf(w, "passwords don't match")
-		return
-	}
-	user, err := s.CreateUser(username, password)
+func registerHandler(s *site) http.Handler {
+	return http.HandlerFunc(
+		func(w http.ResponseWriter, r *http.Request) {
+			if !s.AllowRegistration {
+				fmt.Fprintf(w, "registration not allowed")
+				return
+			}
+			username, password, pass2 := r.FormValue("username"), r.FormValue("password"), r.FormValue("pass2")
+			if password != pass2 {
+				fmt.Fprintf(w, "passwords don't match")
+				return
+			}
+			user, err := s.CreateUser(username, password)
 
-	if err != nil {
-		fmt.Println(err)
-		fmt.Fprintf(w, "could not create user")
-		return
-	}
+			if err != nil {
+				fmt.Println(err)
+				fmt.Fprintf(w, "could not create user")
+				return
+			}
 
-	sess, _ := s.Store.Get(r, "finch")
-	sess.Values["user"] = user.Username
-	sess.Save(r, w)
-	http.Redirect(w, r, "/", http.StatusFound)
+			sess, _ := s.Store.Get(r, "finch")
+			sess.Values["user"] = user.Username
+			sess.Save(r, w)
+			http.Redirect(w, r, "/", http.StatusFound)
+		})
 }
 
 func loginForm(w http.ResponseWriter, req *http.Request) {
