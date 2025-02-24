@@ -10,7 +10,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
-	"syscall"
+	"sync"
 	"time"
 
 	"github.com/braintree/manners"
@@ -80,27 +80,27 @@ func run(ctx context.Context,
 	httpServer.Addr = net.JoinHostPort("", getenv("FINCH_PORT"))
 	httpServer.Handler = srv
 
-	errChan := make(chan error, 10)
 	go func() {
 		log.Println("running on " + getenv("FINCH_PORT"))
-		errChan <- httpServer.ListenAndServe()
+		if err := httpServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			fmt.Fprintf(stderr, "error listening and serving: %s\n", err)
+		}
 	}()
 
-	signalChan := make(chan os.Signal, 1)
-	signal.Notify(signalChan, syscall.SIGINT, syscall.SIGTERM)
-
-	for {
-		select {
-		case err := <-errChan:
-			if err != nil {
-				log.Fatal(err)
-			}
-		case s := <-signalChan:
-			log.Println(fmt.Sprintf("Captured %v. Exiting...", s))
-			httpServer.BlockingClose()
-			os.Exit(0)
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		<-ctx.Done()
+		shutdownCtx := context.Background()
+		shutdownCtx, cancel := context.WithTimeout(shutdownCtx, 10*time.Second)
+		defer cancel()
+		if err := httpServer.Shutdown(shutdownCtx); err != nil {
+			fmt.Fprintf(stderr, "error shutting down http server: %s\n", err)
 		}
-	}
+	}()
+	wg.Wait()
+	return nil
 
 }
 
