@@ -31,7 +31,7 @@ func addRoutes(
 	mux.Handle("POST /u/{username}/c/{slug}/delete/", channelDelete(s))
 
 	// authy stuff
-	mux.HandleFunc("GET /register/", makeHandler(registerFormHandler, s))
+	mux.Handle("GET /register/", registerFormHandler(s))
 	mux.HandleFunc("POST /register/", makeHandler(registerHandler, s))
 	mux.HandleFunc("GET /login/", makeHandler(loginFormHandler, s))
 	mux.HandleFunc("POST /login/", makeHandler(loginHandler, s))

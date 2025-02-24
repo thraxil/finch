@@ -540,18 +540,16 @@ func channelIndex(s *site) http.Handler {
 		})
 }
 
-func registerForm(w http.ResponseWriter, r *http.Request, s *site) {
-	ctx := siteContext{Site: s}
-	ctx.Populate(r)
-	ir := siteResponse{}
-	ctx.PopulateResponse(&ir)
+func registerFormHandler(s *site) http.Handler {
 	tmpl := getTemplate("register.html")
-	tmpl.Execute(w, ir)
-}
-
-func registerFormHandler(w http.ResponseWriter, r *http.Request, s *site) {
-	registerForm(w, r, s)
-	return
+	return http.HandlerFunc(
+		func(w http.ResponseWriter, r *http.Request) {
+			ctx := siteContext{Site: s}
+			ctx.Populate(r)
+			ir := siteResponse{}
+			ctx.PopulateResponse(&ir)
+			tmpl.Execute(w, ir)
+		})
 }
 
 func registerHandler(w http.ResponseWriter, r *http.Request, s *site) {
