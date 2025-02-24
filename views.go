@@ -579,14 +579,12 @@ func registerHandler(s *site) http.Handler {
 		})
 }
 
-func loginForm(w http.ResponseWriter, req *http.Request) {
+func loginFormHandler(s *site) http.Handler {
 	tmpl := getTemplate("login.html")
-	tmpl.Execute(w, nil)
-}
-
-func loginFormHandler(w http.ResponseWriter, r *http.Request, s *site) {
-	loginForm(w, r)
-	return
+	return http.HandlerFunc(
+		func(w http.ResponseWriter, r *http.Request) {
+			tmpl.Execute(w, nil)
+		})
 }
 
 func loginHandler(w http.ResponseWriter, r *http.Request, s *site) {
