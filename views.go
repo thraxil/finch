@@ -400,31 +400,34 @@ func channelDelete(s *site) http.Handler {
 		})
 }
 
-func postDelete(w http.ResponseWriter, r *http.Request, s *site) {
-	username := r.PathValue("username")
-	puuid := r.PathValue("puuid")
-	ctx := siteContext{Site: s}
-	_, err := s.GetUser(username)
-	if err != nil {
-		http.Error(w, "user doesn't exist", 404)
-		return
-	}
-	p, err := s.GetPostByUUID(puuid)
-	if err != nil {
-		http.Error(w, "post not found", 404)
-		return
-	}
-	ctx.Populate(r)
-	if ctx.User == nil {
-		http.Redirect(w, r, "/login/", http.StatusFound)
-		return
-	}
-	if ctx.User.ID != p.User.ID {
-		http.Error(w, "you can only delete your own posts", 403)
-		return
-	}
-	ctx.Site.DeletePost(p)
-	http.Redirect(w, r, "/", http.StatusFound)
+func postDelete(s *site) http.Handler {
+	return http.HandlerFunc(
+		func(w http.ResponseWriter, r *http.Request) {
+			username := r.PathValue("username")
+			puuid := r.PathValue("puuid")
+			ctx := siteContext{Site: s}
+			_, err := s.GetUser(username)
+			if err != nil {
+				http.Error(w, "user doesn't exist", 404)
+				return
+			}
+			p, err := s.GetPostByUUID(puuid)
+			if err != nil {
+				http.Error(w, "post not found", 404)
+				return
+			}
+			ctx.Populate(r)
+			if ctx.User == nil {
+				http.Redirect(w, r, "/login/", http.StatusFound)
+				return
+			}
+			if ctx.User.ID != p.User.ID {
+				http.Error(w, "you can only delete your own posts", 403)
+				return
+			}
+			ctx.Site.DeletePost(p)
+			http.Redirect(w, r, "/", http.StatusFound)
+		})
 }
 
 func channelFeed(w http.ResponseWriter, r *http.Request, s *site) {
