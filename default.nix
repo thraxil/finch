@@ -10,6 +10,7 @@
     }
   )
 , buildGoApplication ? pkgs.buildGoApplication
+, go ? pkgs.go
 }:
 
 buildGoApplication {
@@ -18,4 +19,6 @@ buildGoApplication {
   pwd = ./.;
   src = ./.;
   modules = ./gomod2nix.toml;
+  go = pkgs.go;
+  GOTOOLCHAIN = "local";
 }
