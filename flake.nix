@@ -30,7 +30,7 @@
               gomod2nix.legacyPackages.${system}.gomod2nix
             ];
             
-            FINCH_DB_FILE="/tmp/finch.db";
+            FINCH_DB_FILE="database.db";
             FINCH_PORT="9000";
             FINCH_TEMPLATE_DIR="templates";
             FINCH_MEDIA_DIR="media";

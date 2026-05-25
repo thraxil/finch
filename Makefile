@@ -12,6 +12,9 @@ run: finch
 newdb:
 	sqlite3 database.db < schema.sql
 
+seed:
+	sqlite3 database.db < seed.sql
+
 rmdb:
 	rm -f database.db
 
