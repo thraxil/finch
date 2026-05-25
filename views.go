@@ -366,7 +366,7 @@ func userFeed(s *site) http.Handler {
 			}
 			atom, _ := feed.ToAtom()
 			w.Header().Set("Content-Type", "application/atom+xml")
-			fmt.Fprintf(w, atom)
+			fmt.Fprint(w, atom)
 		})
 }
 
@@ -481,7 +481,7 @@ func channelFeed(s *site) http.Handler {
 			}
 			atom, _ := feed.ToAtom()
 			w.Header().Set("Content-Type", "application/atom+xml")
-			fmt.Fprintf(w, atom)
+			fmt.Fprint(w, atom)
 		})
 }
 

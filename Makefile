@@ -3,6 +3,9 @@ ROOT_DIR:=$(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 finch: *.go
 	go build .
 
+test:
+	go test -v ./...
+
 run: finch
 	./finch
 
