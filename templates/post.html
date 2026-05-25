@@ -22,19 +22,19 @@
 </form>
 {{ end }}
 
-<div class="panel panel-default">
-  <div class="panel-body">
+<div class="post">
+  <div>
 
 {{.Post.RenderBody}}
 
 {{ if .Post.Channels }}
 <p>{{ range .Post.Channels }}
-<a href="/u/{{.User.Username}}/c/{{.Slug}}/"><span class="label">{{.Label}}</span></a>
+<a href="/u/{{.User.Username}}/c/{{.Slug}}/"><span class="channel-tag">{{.Label}}</span></a>
 {{ end }}</p>
 {{ end }}
 
 
-<div class="panel-footer"><a href="/u/{{.Post.User.Username}}/">{{.Post.User.Username}}</a>
+<div class="post-meta"><a href="/u/{{.Post.User.Username}}/">{{.Post.User.Username}}</a>
  @ {{.Post.Time}}</div>
 
 </div></div>

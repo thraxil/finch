@@ -13,14 +13,14 @@
 
 		<div class="row">
 			<div class="col-lg-12">
-				<textarea class="form-control" name="body" rows="10">{{.Body}}</textarea>
+				<textarea  name="body" rows="10">{{.Body}}</textarea>
 			</div>
 		</div>
 
 		<div class="row">
 			<div class="col-lg-6">
 
-				<ul class="list-inline">
+				<ul class="channel-list">
 				{{ range .Channels }}
 				<li><label><input type="checkbox" name="channel_{{.ID}}" />
 				{{.Label}}</label></li>
@@ -28,13 +28,13 @@
 				</ul>
 
 				<input type="text" name="new_channel0" placeholder="new channel 1"
-							 class="form-control" />
+							  />
 
 				<input type="text" name="new_channel1" placeholder="new channel 2"
-							 class="form-control" />
+							  />
 
 				<input type="text" name="new_channel2" placeholder="new channel 3"
-							 class="form-control" />
+							  />
 			</div>
 			<div class="col-lg-6">
 				<input type="submit" class="btn btn-primary" />

@@ -11,9 +11,9 @@
 <h2><a href="feed/"><img src="/media/feed.svg" width="20" height="20" /></a> User: {{.User.Username}}</h2>
 
 {{ if .Channels }}
-<div class="panel panel-info">
-    <div class="panel-heading">Channels</div>
-    <div class="panel-body">
+<div class="post">
+    <div class="post-meta">Channels</div>
+    <div>
         {{ range .Channels }}
         <a href="/u/{{$username}}/c/{{.Slug}}/" class="btn btn-info">{{.Label}}</a>
         {{ end }}
@@ -31,8 +31,8 @@
     </ul>
 
     {{ range .Posts }}
-    <div class="panel panel-default">
-        <div class="panel-body">
+    <div class="post">
+        <div>
 
 
             {{.RenderBody}}
@@ -40,11 +40,11 @@
             {{ if .Channels }}
             <p>
                 {{ range .Channels }}
-                <a href="/u/{{.User.Username}}/c/{{.Slug}}/"><span class="label">{{.Label}}</span></a>
+                <a href="/u/{{.User.Username}}/c/{{.Slug}}/"><span class="channel-tag">{{.Label}}</span></a>
                 {{ end }}</p>
             {{ end }}
 
-                <div class="panel-footer"><a href="/u/{{.User.Username}}/">{{.User.Username}}</a>
+                <div class="post-meta"><a href="/u/{{.User.Username}}/">{{.User.Username}}</a>
                     @ <a href="{{.URL}}">{{.Time}}</a></div>
 
 
