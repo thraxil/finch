@@ -1,8 +1,6 @@
 module github.com/thraxil/finch
 
-go 1.24.0
-
-toolchain go1.24.1
+go 1.25.0
 
 require (
 	github.com/braintree/manners v0.0.0-20160418043613-82a8879fc5fd
@@ -11,7 +9,7 @@ require (
 	github.com/mattn/go-sqlite3 v1.14.16
 	github.com/nu7hatch/gouuid v0.0.0-20131221200532-179d4d0c4d8d
 	github.com/russross/blackfriday v0.0.0-20151110051855-0b647d0506a6
-	golang.org/x/crypto v0.45.0
+	golang.org/x/crypto v0.52.0
 )
 
 require (
